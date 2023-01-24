@@ -1,0 +1,1018 @@
+---
+title: "Exploratory analysis of principal sensory trigeminal nucleus and ventrobasal thalamus"
+author: "Evgenii O. Tretiakov"
+date: "`r Sys.Date()`"
+output:
+  workflowr::wflow_html:
+    toc: true
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(
+  autodep        = TRUE,
+  cache          = FALSE,
+  cache.lazy     = FALSE,
+  dev            = c("png", "pdf"),
+  echo           = TRUE,
+  error          = FALSE,
+  fig.align      = "center",
+  fig.width      = 14,
+  fig.height     = 12,
+  message        = FALSE,
+  warning        = FALSE
+)
+Sys.setenv(RETICULATE_PYTHON = "/opt/python/3.8.8/bin/python")
+# Load tidyverse infrastructure packages
+suppressPackageStartupMessages({
+  library(here)
+  library(RColorBrewer)
+  library(viridis)
+  library(tidyverse)
+  library(magrittr)
+  library(stringr)
+  library(skimr)
+  library(future)
+  library(zeallot)
+  library(kableExtra)
+  library(reticulate)
+})
+reticulate::use_condaenv("/opt/python/3.8.8/bin/python")
+
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(SeuratWrappers)
+  library(SeuratDisk)
+  library(sctransform)
+  library(glmGamPoi)
+  library(patchwork)
+  library(qs)
+  library(Scillus)
+  library(scCustomize)
+  library(Nebulosa)
+  library(mrtree)
+  library(gprofiler2)
+})
+
+# Set paths
+src_dir    <- here('code')
+data_dir   <- here('data')
+output_dir <- here('output')
+plots_dir  <- here(output_dir, 'figures')
+tables_dir <- here(output_dir, 'tables')
+source(here(src_dir, 'genes.R'))
+source(here(src_dir, 'functions.R'))
+
+# parallelisation
+n_cores <- 100
+plan("multisession", workers = n_cores)
+options(future.globals.maxSize = 1000000 * 1024^2) # 1000Gb
+# plan("sequential")
+plan()
+
+# set seed
+reseed <- 42
+set.seed(seed = reseed)
+
+# ggplot2 theme
+theme_set(ggmin::theme_powerpoint())
+
+```
+
+# Combined analysis of scRNA-seq datasets derived from the same experiment
+Since it was derived from the same two pooled mice we might try to merge them together.
+```{r load}
+souporcell_THP7 <-
+  read_tsv(here("souporcell/THP7", "clusters.tsv")) %>%
+  mutate(origin = "THP7",
+         cell_name = str_c("THP7_", barcode))
+souporcell_Pr5P7 <-
+  read_tsv(here("souporcell/Pr5P7", "clusters.tsv")) %>%
+  mutate(origin = "Pr5P7",
+         cell_name = str_c("Pr5P7_", barcode))
+souporcell <-
+  bind_rows(
+    souporcell_THP7,
+    souporcell_Pr5P7)
+
+souporcell %>%
+  janitor::tabyl(status, assignment, origin)
+
+
+cell_bender_merged <-
+  Read_CellBender_h5_Multi_Directory(
+    base_path = here("cellbender"),
+    custom_name = "_output_filtered.h5",
+    sample_names = c("THP7", "Pr5P7"),
+    merge = TRUE)
+
+cell_ranger_merged <-
+  Read10X_h5_Multi_Directory(
+    base_path = here("cellranger"),
+    default_10X_path = TRUE,
+    h5_filename = "filtered_feature_bc_matrix.h5",
+    merge = TRUE,
+    sample_names = c("THP7", "Pr5P7"),
+    parallel = TRUE, 
+    num_cores = 16)
+
+combined.srt <-
+  Create_CellBender_Merged_Seurat(
+    raw_cell_bender_matrix = cell_bender_merged,
+    raw_counts_matrix = cell_ranger_merged,
+    raw_assay_name = "RAW")
+```
+
+After running troublet (genotyping-based detection of doublets), it seems that we don't have much of doublets.
+
+### Elimination of ambient RNA
+
+```{r echo=FALSE}
+combined.srt <-
+  Add_CellBender_Diff(
+    seurat_object = combined.srt,
+    raw_assay_name = "RAW",
+    cell_bender_assay_name = "RNA")
+
+head(combined.srt@meta.data, 5) %>%
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"))  
+```
+
+```{r echo=FALSE}
+median_stats <-
+  Median_Stats(
+    seurat_object = combined.srt,
+    group_by_var = "orig.ident",
+    median_var = c("nCount_Diff", "nFeature_Diff"))
+
+median_stats %>%
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
+```
+
+```{r echo=FALSE}
+feature_diff <-
+  CellBender_Feature_Diff(
+    seurat_object = combined.srt,
+    raw_assay = "RAW",
+    cell_bender_assay = "RNA")
+head(feature_diff, 5) %>%
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"))  
+```
+
+### Plot feature differences
+In addition to returning the data.frame it can be useful to visually examine the changes/trends after running CellBender.  
+
+```{r echo=FALSE, fig.height=6, fig.width=8, fig.align='center'}
+CellBender_Diff_Plot(feature_diff_df = feature_diff)
+```
+
+
+```{r pl-vln-qc, fig.align='center', fig.width=9, fig.asp = 0.618}
+sex_genes <-
+  str_to_title(c('EHD2', 'ESPL1', 'JARID1D', 'PNPLA4',
+                 'RPS4Y1', 'XIST','tsix', 'Eif2s3y',
+                 'Ddx3y', 'Uty', 'Kdm5d')) %>% .[. %in% rownames(combined.srt)]
+stress_genes <-
+  str_to_title(c('Rpl26','Gstp1','Rpl35a','Erh',
+                 'Slc25a5','Pgk1','Eno1',
+                 'Tubb2a','Emc4','Scg5')) %>% .[. %in% rownames(combined.srt)]
+combined.srt[["percent_mt"]] <- PercentageFeatureSet(combined.srt, pattern = "^mt-")
+combined.srt[["percent_rb"]] <- PercentageFeatureSet(combined.srt, pattern = "^Rp[sl]")
+combined.srt[["percent_hb"]] <- PercentageFeatureSet(combined.srt, pattern = "^Hb[^(p)]")
+combined.srt$log10GenesPerUMI <-
+  log10(combined.srt$nFeature_RNA) / log10(combined.srt$nCount_RNA)
+# Visualize QC metrics as a violin plot
+VlnPlot(combined.srt,
+        features = c("log10GenesPerUMI", "nFeature_RNA", "nCount_RNA",
+                     "percent_mt", "percent_rb", "percent_hb"),
+        ncol = 3) & 
+  theme(plot.title = element_text(size=16))
+
+```
+
+```{r pl-scatter-qc, fig.width=11, fig.asp = 0.8}
+plot1 <- FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "percent_mt") + NoLegend()
+plot2 <- FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + NoLegend()
+plot3 <- FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "percent_rb") + NoLegend()
+plot4 <- FeatureScatter(combined.srt, feature1 = "percent_rb", feature2 = "percent_mt")
+(plot1 + plot2) / (plot3 + plot4)
+```
+
+```{r pl-scatter-doublets-log-prob, echo=FALSE}
+combined.srt$cell_name <- colnames(combined.srt)
+if (any(sum(combined.srt$cell_name %in% souporcell$cell_name))) {
+  combined.srt@meta.data %<>%
+    left_join(souporcell,
+              by = c("cell_name" = "cell_name",
+                     "orig.ident" = "origin"))
+  combined.srt[['QC']] <-
+    ifelse(combined.srt@meta.data$status == 'doublet','Doublet','Pass')
+  FeatureScatter(combined.srt, feature1 = "nFeature_RNA", feature2 = "log_prob_doublet")
+} else {
+  combined.srt[['QC']] <- "Pass"
+}
+
+```
+
+```{r}
+combined.srt[['QC']] <-
+  ifelse(
+    combined.srt@meta.data$nFeature_RNA < 500 &
+      combined.srt@meta.data$QC == 'Pass',
+    'Low_nFeature',
+    combined.srt@meta.data$QC
+  )
+combined.srt[['QC']] <-
+  ifelse(
+    combined.srt@meta.data$nFeature_RNA < 500 &
+      combined.srt@meta.data$QC != 'Pass' &
+      combined.srt@meta.data$QC != 'Low_nFeature',
+    paste('Low_nFeature', combined.srt@meta.data$QC, sep = ','),
+    combined.srt@meta.data$QC
+  )
+combined.srt[['QC']] <-
+  ifelse(
+    combined.srt@meta.data$percent_mt > 5 &
+      combined.srt@meta.data$QC == 'Pass',
+    'High_MT',
+    combined.srt@meta.data$QC
+  )
+combined.srt[['QC']] <-
+  ifelse(
+    combined.srt@meta.data$percent_mt > 5 &
+      combined.srt@meta.data$QC != 'Pass' &
+      combined.srt@meta.data$QC != 'High_MT',
+    paste('High_MT', combined.srt@meta.data$QC, sep = ','),
+    combined.srt@meta.data$QC
+  )
+combined.srt[['QC']] <-
+  ifelse(
+    combined.srt@meta.data$nCount_RNA > 35000 &
+      combined.srt@meta.data$QC == 'Pass',
+    'High_UMIs',
+    combined.srt@meta.data$QC
+  )
+combined.srt[['QC']] <-
+  ifelse(
+    combined.srt@meta.data$nCount_RNA > 35000 &
+      combined.srt@meta.data$QC != 'Pass' &
+      combined.srt@meta.data$QC != 'High_UMIs',
+    paste('High_UMIs', combined.srt@meta.data$QC, sep = ','),
+    combined.srt@meta.data$QC
+  )
+table(combined.srt[['QC']])
+```
+
+```{r fig.align='center', fig.width=9, fig.asp = 0.618}
+VlnPlot(subset(combined.srt, subset = QC == 'Pass'), 
+        features = c("log10GenesPerUMI", "nFeature_RNA", "nCount_RNA",
+                     "percent_mt", "percent_rb", "percent_hb"),
+        ncol = 3) & 
+  theme(plot.title = element_text(size=16))
+```
+
+```{r fig.align='center', fig.asp=.309, fig.width=9}
+combined.srt <- NormalizeData(combined.srt)
+combined.srt <- 
+  FindVariableFeatures(
+    combined.srt, 
+    selection.method = "vst",
+    nfeatures = 3000)
+top10 <- head(VariableFeatures(combined.srt), 10)
+top10
+plot5 <- VariableFeaturePlot(combined.srt)
+LabelPoints(plot = plot5, points = top10, repel = TRUE, xnudge = 0, ynudge = 0)
+all.genes <- rownames(combined.srt)
+hvg <- VariableFeatures(combined.srt)
+var_regex <- '^Hla-|^Ig[hjkl]|^Rna|^mt-|^Rp[sl]|^Hb[^(p)]|^Gm'
+hvg <- hvg[str_detect(pattern = var_regex, string = hvg, negate = T)]
+combined.srt[["var_regex"]] <-
+  PercentageFeatureSet(combined.srt, pattern = var_regex)
+combined.srt <- ScaleData(combined.srt,
+                          features = all.genes,
+                          vars.to.regress = c("var_regex"))
+npcs <-  30
+combined.srt <- RunPCA(combined.srt, 
+               features = hvg,
+               npcs = npcs,
+               seed.use = reseed,
+               verbose = TRUE)
+VizDimLoadings(combined.srt, dims = 1:9, reduction = "pca") & 
+  theme(axis.text = element_text(size = 5),
+        axis.title = element_text(size = 8, face = "bold"))
+DimHeatmap(combined.srt, dims = 1:6, nfeatures = 20, cells = 500, balanced = T)
+DimPlot(combined.srt, reduction = "pca")
+ElbowPlot(combined.srt)
+combined.srt <-
+  JackStraw(
+    object = combined.srt,
+    assay = "RNA",
+    reduction = "pca",
+    dims = npcs,
+    num.replicate = 100,
+    prop.freq = 0.02,
+    maxit = 1000)
+combined.srt <-
+  ScoreJackStraw(combined.srt,
+                 dims = seq_along(combined.srt[["pca"]]@stdev))
+JackStrawPlot(combined.srt, dims = seq_along(combined.srt[["pca"]]@stdev))
+test_pc <- 
+  PCScore(object = combined.srt,
+           PCs = seq_along(combined.srt[["pca"]]@stdev),
+           score.thresh = 1e-05)
+selected_pcs <-
+  seq_along(
+    combined.srt[["pca"]]@stdev
+    )[test_pc$Score <= 1e-03 & 
+        combined.srt[["pca"]]@stdev > quantile(combined.srt[["pca"]]@stdev, .25)]
+selected_pcs
+
+combined.srt <-
+  combined.srt |>
+  FindNeighbors(
+    dims = selected_pcs,
+    k.param = 15,
+    annoy.metric = "euclidean",
+    n.trees = 100,
+    verbose = FALSE) |>
+  RunUMAP(
+    dims = selected_pcs,
+    reduction.name = "umap",
+    reduction.key = "UMAP_",
+    return.model = FALSE,
+    umap.method = "umap-learn",
+    densmap = TRUE,
+    dens.lambda = 1L,
+    dens.frac = 0.3,
+    n.epochs = 1000L,
+    n.neighbors = 15L,
+    min.dist = 0.01,
+    spread = 2L,
+    metric = "correlation",
+    init = "pca",
+    seed.use = reseed,
+    verbose = FALSE)
+
+metadata <- combined.srt@meta.data
+rownames(metadata) <- colnames(combined.srt)
+ref.labels <- metadata$orig.ident
+
+resolutions <-
+  modularity_event_sampling(
+    A = combined.srt@graphs$RNA_snn,
+    n.res = 20,
+    gamma.min = 0.1,
+    gamma.max = 3.000001
+  ) # sample based on the similarity matrix
+
+# clustering using Suerat
+combined.srt <- combined.srt |> 
+  FindClusters(algorithm = 4, method = "igraph",
+               resolution = resolutions, random.seed = reseed,
+               verbose = FALSE)
+
+# initial cluster tree from Seurat flat clustering
+plot_clustree(
+  labelmat = combined.srt@meta.data,
+  prefix = 'RNA_snn_res.',
+  ref.labels = ref.labels,
+  plot.ref = FALSE
+)
+
+out <-  mrtree(
+  combined.srt,
+  prefix = 'RNA_snn_res.',
+  n.cores = n_cores,
+  consensus = FALSE,
+  augment.path = FALSE
+)
+# if there are few partitions per k, within resolution consensus step can speed up the algorithm
+# weight per sample is encoraged if the classes are imbalanced
+
+plot_tree(
+  labelmat = out$labelmat.mrtree,
+  ref.labels = ref.labels,
+  plot.piechart = TRUE,
+  node.size = 0.2,
+  tip.label.dist = 10,
+  bottom.margin = 30
+)
+
+# Adjusted Multiresolution Rand Index (AMRI)
+ks.flat <-  apply(
+  out$labelmat.flat,
+  2,
+  FUN = function(x)
+    length(unique(x))
+)
+ks.mrtree <-  apply(
+  out$labelmat.mrtree,
+  2,
+  FUN = function(x)
+    length(unique(x))
+)
+amri.flat <-  sapply(1:ncol(out$labelmat.flat), function(i)
+  AMRI(out$labelmat.flat[, i], ref.labels)$amri)
+amri.flat <-  aggregate(amri.flat, by = list(k = ks.flat), FUN = mean)
+amri.recon <-  sapply(1:ncol(out$labelmat.mrtree), function(i)
+  AMRI(out$labelmat.mrtree[, i], ref.labels)$amri)
+
+df <-  rbind(
+  data.frame(
+    k = amri.flat$k,
+    amri = amri.flat$x,
+    method = 'Seurat flat'
+  ),
+  data.frame(k = ks.mrtree, amri = amri.recon, method = 'MRtree')
+)
+ggplot2::ggplot(data = df, aes(x = k, y = amri, color = method)) + geom_line() + theme_bw()
+
+stab.out <- stability_plot(out)
+stab.out$plot
+
+kable_material(
+  kable(
+    stab.out$df,
+    "html"),
+  bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+  position = "left",
+  font_size = 14
+)
+
+resK <- SelectResolution(stab.out$df)
+resK
+
+kable_material(
+  kable(
+    table(
+      out$labelmat.mrtree[, which.min(
+        abs(as.integer(
+          str_remove(dimnames(
+            out$labelmat.mrtree)[[2]], "K"
+          )
+        ) - resK)
+      )]
+    ),
+    "html"),
+  bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+  position = "left",
+  font_size = 14
+)
+
+combined.srt$k_tree <- out$labelmat.mrtree[, which.min(
+  abs(as.integer(
+    str_remove(dimnames(
+      out$labelmat.mrtree)[[2]], "K"
+    )
+  ) - resK)
+)]
+p1 <- DimPlot(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
+p2 <- DimPlot(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
+
+p1 | p2
+
+Idents(combined.srt) <- "k_tree"
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+FeaturePlot(combined.srt, features = "percent_mt") & 
+  theme(plot.title = element_text(size = 16)) & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+
+FeaturePlot(combined.srt, features = "nFeature_RNA") & 
+  theme(plot.title = element_text(size = 16)) & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+```
+
+### Dual Assay Plotting
+For Cell Bender especially, but also potentially for other assays as well, it can be helpful during analysis to plot the corrected and uncorrected counts for given feature.  
+
+```{r include=FALSE, echo=FALSE}
+combined.srt <- NormalizeData(combined.srt, assay = "RAW")
+```
+
+```{r echo=FALSE, fig.height=4, fig.width=10, fig.align='center'}
+FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Galr1", assay1 = "RNA", assay2 = "RAW") & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) & theme(plot.title = element_text(size = 24))
+```
+
+```{r echo=FALSE, fig.height=4, fig.width=10, fig.align='center'}
+FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Gal", assay1 = "RNA", assay2 = "RAW") & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) & theme(plot.title = element_text(size = 24))
+```
+Both targets look fine.
+
+```{r}
+DimPlot(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
+```
+
+```{r}
+combined.srt <- subset(combined.srt, subset = QC == 'Pass')
+DimPlot(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
+```
+### Reevaluate after subsetting low-quality cells
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+combined.srt <-
+  CellCycleScoring(combined.srt,
+                   s.features = s.genes,
+                   g2m.features = g2m.genes)
+table(combined.srt[[]]$Phase)
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+FeaturePlot(combined.srt,features = "percent_mt", label.size = 4, repel = T, pt.size = 3, label = T)  & 
+  theme(plot.title = element_text(size = 16)) & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+VlnPlot(combined.srt, features = "percent_mt") & theme(plot.title = element_text(size = 16))
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+FeaturePlot(combined.srt, features = "percent_rb",
+            label.size = 4,repel = T,pt.size = 3,label = T)  & 
+  theme(plot.title = element_text(size = 16)) & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+VlnPlot(combined.srt, features = "percent_rb") & theme(plot.title = element_text(size=16))
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+VlnPlot(combined.srt, features = c("nCount_RNA", "nFeature_RNA")) & theme(plot.title = element_text(size = 16))
+```
+
+```{r fig.align='center', fig.width=9, fig.asp = 0.309}
+FeaturePlot(combined.srt,
+            features = c("S.Score", "G2M.Score"),
+            label.size = 4,
+            repel = T,
+            pt.size = 3,
+            label = T) & 
+  theme(plot.title = element_text(size = 16))
+```
+
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+VlnPlot(combined.srt,
+        features = c("S.Score", "G2M.Score")) &
+  theme(plot.title = element_text(size=16))
+```
+
+### Apply SCTransform pipeline
+
+```{r normalisation}
+# normalize and run dimensionality reduction on control dataset
+npcs <-  30
+metadata = combined.srt@meta.data
+rownames(metadata) = colnames(combined.srt)
+combined.srt <-
+  SCTransform(
+    combined.srt,
+    vst.flavor = "v2",
+    ncells = ncol(combined.srt),
+    variable.features.n = 3500,
+    vars.to.regress = c("var_regex", "log10GenesPerUMI",
+                        "S.Score", "G2M.Score"),
+    return.only.var.genes = FALSE,
+    seed.use = reseed,
+    verbose = FALSE
+  ) 
+hvg <- VariableFeatures(combined.srt)
+var_regex <- '^Hla-|^Ig[hjkl]|^Rna|^mt-|^Rp[sl]|^Hb[^(p)]|^Gm'
+hvg <- hvg[str_detect(pattern = var_regex, string = hvg, negate = T)]
+combined.srt <- combined.srt %>%
+  RunPCA(features = hvg, npcs = npcs, seed.use = reseed, verbose = FALSE)
+
+```
+
+```{r pca-genes}
+print(combined.srt[["pca"]], dims = 1:5, nfeatures = 5)
+```
+
+```{r pl-pca-loadings, fig.height=8, fig.width=6}
+VizDimLoadings(combined.srt, dims = 1:4, reduction = "pca")
+```
+
+```{r pl-pca-heatmap, fig.height=8, fig.width=6}
+DimHeatmap(combined.srt, dims = 1:15, cells = 500, balanced = TRUE)
+```
+
+```{r pl-elbow-pca, fig.height=4, fig.width=6}
+ElbowPlot(combined.srt, ndims = npcs)
+```
+
+```{r pl-unsupervised}
+combined.srt <-
+  combined.srt |>
+  FindNeighbors(
+    dims = seq_along(combined.srt[["pca"]]@stdev),
+    k.param = 20,
+    annoy.metric = "euclidean",
+    n.trees = 100,
+    verbose = FALSE) |>
+  RunUMAP(
+    dims = seq_along(combined.srt[["pca"]]@stdev),
+    reduction.name = "umap",
+    reduction.key = "UMAP_",
+    return.model = TRUE,
+    umap.method = "umap-learn",
+    densmap = TRUE,
+    dens.lambda = 1L,
+    dens.frac = 0.1,
+    n.epochs = 1000L,
+    n.neighbors = 20L,
+    min.dist = 0.01,
+    spread = 4L,
+    metric = "correlation",
+    init = "pca",
+    seed.use = reseed,
+    verbose = FALSE) |>
+  FindNeighbors(
+    reduction = "umap",
+    dims = 1:2,
+    force.recalc = TRUE,
+    k.param = 20,
+    annoy.metric = "euclidean",
+    n.trees = 100,
+    verbose = FALSE)
+```
+
+
+Plot by source after clean up
+
+```{r pl-all-RNA, fig.align='center', fig.width=9, fig.asp = 0.618}
+plEmbCombBatch <- DimPlot(combined.srt, reduction = "umap",
+                          group.by = "orig.ident", pt.size = 3,
+                          label = TRUE, repel = TRUE) + NoLegend()
+plEmbCombBatch
+```
+
+```{r pl-clustree, fig.width=10, fig.asp=1.618}
+metadata <- combined.srt@meta.data
+rownames(metadata) <- colnames(combined.srt)
+ref.labels <- metadata$k_tree
+
+resolutions <-
+  modularity_event_sampling(
+    A = combined.srt@graphs$SCT_snn,
+    n.res = 70,
+    gamma.min = 0.05,
+    gamma.max = 4.000001
+  ) # sample based on the similarity matrix
+
+# clustering using Suerat
+combined.srt <- combined.srt |> 
+  FindClusters(algorithm = 4, method = "igraph",
+               resolution = resolutions, random.seed = reseed,
+               verbose = FALSE)
+
+# initial cluster tree from Seurat flat clustering
+plot_clustree(
+  labelmat = combined.srt@meta.data,
+  prefix = 'SCT_snn_res.',
+  ref.labels = ref.labels,
+  plot.ref = FALSE
+)
+```
+
+```{r pl-mrtree, fig.height=6, fig.width=11, echo=TRUE, include=FALSE}
+out <-  mrtree(
+  combined.srt,
+  prefix = 'SCT_snn_res.',
+  n.cores = n_cores,
+  consensus = FALSE,
+  augment.path = FALSE
+)
+# if there are few partitions per k, within resolution consensus step can speed up the algorithm
+# weight per sample is encoraged if the classes are imbalanced
+
+plot_tree(
+  labelmat = out$labelmat.mrtree,
+  ref.labels = ref.labels,
+  plot.piechart = TRUE,
+  node.size = 0.2,
+  tip.label.dist = 10,
+  bottom.margin = 30
+)
+```
+
+```{r pl-clustering-amri, fig.align='center', fig.width=4, fig.asp = 0.618}
+# Adjusted Multiresolution Rand Index (AMRI)
+ks.flat <-  apply(
+  out$labelmat.flat,
+  2,
+  FUN = function(x)
+    length(unique(x))
+)
+ks.mrtree <-  apply(
+  out$labelmat.mrtree,
+  2,
+  FUN = function(x)
+    length(unique(x))
+)
+amri.flat <-  sapply(1:ncol(out$labelmat.flat), function(i)
+  AMRI(out$labelmat.flat[, i], ref.labels)$amri)
+amri.flat <-  aggregate(amri.flat, by = list(k = ks.flat), FUN = mean)
+amri.recon <-  sapply(1:ncol(out$labelmat.mrtree), function(i)
+  AMRI(out$labelmat.mrtree[, i], ref.labels)$amri)
+
+df <-  rbind(
+  data.frame(
+    k = amri.flat$k,
+    amri = amri.flat$x,
+    method = 'Seurat flat'
+  ),
+  data.frame(k = ks.mrtree, amri = amri.recon, method = 'MRtree')
+)
+ggplot2::ggplot(data = df, aes(x = k, y = amri, color = method)) + geom_line() + theme_bw()
+```
+
+```{r pl-clustering-resolution, fig.align='center', fig.width=4, fig.asp = 0.618}
+stab.out <- stability_plot(out)
+stab.out$plot
+```
+
+```{r select-resolution}
+kable_material(
+  kable(
+    stab.out$df,
+    "html"),
+  bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+  position = "left",
+  font_size = 14
+)
+
+resK <- SelectResolution(stab.out$df)
+resK
+
+kable_material(
+  kable(
+    table(
+      out$labelmat.mrtree[, which.min(
+        abs(as.integer(
+          str_remove(dimnames(
+            out$labelmat.mrtree)[[2]], "K"
+          )
+        ) - resK)
+      )]
+    ),
+    "html"),
+  bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+  position = "left",
+  font_size = 14
+)
+```
+
+```{r pl-clustering, fig.align='center', fig.width=9, fig.asp = 0.309}
+combined.srt$k_tree <- out$labelmat.mrtree[, which.min(
+  abs(as.integer(
+    str_remove(dimnames(
+      out$labelmat.mrtree)[[2]], "K"
+    )
+  ) - resK)
+)]
+p1 <- DimPlot(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
+p2 <- DimPlot(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
+
+p1 | p2
+```
+
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot(combined.srt, "Galr1", pt.size = 2, order = T) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
+```
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot(combined.srt, "Gal", pt.size = 2, order = T) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r, fig.asp=1.818, fig.width=2.4}
+DotPlot(combined.srt, assay = "RNA", features = c("Galr1", "Gal"), split.by = "orig.ident")
+```
+
+We see the spread of our targets across derived clusters, which isn't optimal. Lets see if we will see some significant hits with proper statistical testing.
+
+```{r markers-tables}
+Idents(combined.srt) <- "k_tree"
+combined.srt <- 
+  PrepSCTFindMarkers(combined.srt, assay = "SCT")
+
+markers.logreg <- 
+  FindAllMarkers(
+    combined.srt,
+    assay = "SCT",
+    verbose = FALSE,
+    random.seed = reseed,
+    only.pos = TRUE,
+    min.pct = 0.05,
+    base = 10,
+    logfc.threshold = 0.01,
+    densify = TRUE,
+    test.use = "LR")
+write_csv(markers.logreg,
+          here(tables_dir,
+               'hevesi2023-all-mrk_logreg-sct_combined.csv'))
+
+markers.logreg %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log10FC) %>%
+  kable("html") %>%
+  kable_material(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+    position = "left",
+    font_size = 14
+  )
+
+
+markers.wilcox <-
+  FindAllMarkers(
+    combined.srt,
+    assay = "SCT",
+    verbose = FALSE,
+    random.seed = reseed,
+    only.pos = TRUE,
+    min.pct = 0.05,
+    base = 10,
+    logfc.threshold = 0.01,
+    densify = TRUE,
+    test.use = "wilcox")
+write_csv(markers.wilcox,
+          here(tables_dir,
+               'hevesi2023-all-mrk_wilcox-sct_combined.csv'))
+markers.wilcox %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log10FC) %>%
+  kable("html") %>%
+  kable_material(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+    position = "left",
+    font_size = 14
+  )
+
+
+```
+
+```{r pl-heatmap, fig.width = 18, fig.asp = 0.868}
+markers.logreg %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log10FC) -> top10
+DoHeatmap(combined.srt, features = top10$gene) + NoLegend()
+```
+
+It seems that we should split datasets despite the fact that they're derived from the same experiment. It should help us to get better embeddings and clusters.
+
+# Separate analysis
+
+```{r}
+DefaultAssay(combined.srt) <- "RNA"
+srt.list <- SplitObject(combined.srt,
+                        split.by = "orig.ident")
+c(THP7, Pr5P7) %<-% srt.list
+```
+
+
+## Ventrobasal thalamus
+```{r fig.width = 18, fig.asp = 0.868}
+n_pcs <- 100
+c(THP7, THP7.markers.logreg, THP7.markers.mast)  %<-% DeriveKTree(THP7)
+
+THP7.markers.logreg %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log10FC) %>%
+  kable("html") %>%
+  kable_material(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+    position = "left",
+    font_size = 14
+  )
+
+THP7.markers.mast %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log10FC) %>%
+  kable("html") %>%
+  kable_material(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+    position = "left",
+    font_size = 14
+  )
+
+THP7.markers.mast %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log10FC) -> top10
+DoHeatmap(combined.srt, features = top10$gene) + NoLegend()
+```
+
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot(THP7, "Galr1", pt.size = 3, order = T) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot(THP7, "Gal", pt.size = 3, order = T) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r}
+SaveH5Seurat(THP7, 
+             filename = here(data_dir,
+                             "THP7_clusters.h5Seurat"))
+Convert(here(data_dir,
+             "THP7_clusters.h5Seurat"), 
+        dest = "h5ad")
+```
+
+
+## Principal sensory trigeminal nucleus 
+```{r fig.width = 18, fig.asp = 0.868}
+n_pcs <- 100
+c(Pr5P7, Pr5P7.markers.logreg, Pr5P7.markers.mast)  %<-% DeriveKTree(Pr5P7)
+
+Pr5P7.markers.logreg %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log10FC) %>%
+  kable("html") %>%
+  kable_material(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+    position = "left",
+    font_size = 14
+  )
+
+Pr5P7.markers.mast %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log10FC) %>%
+  kable("html") %>%
+  kable_material(
+    bootstrap_options = c("bordered",
+                          "condensed",
+                          "responsive",
+                          "striped"),
+    position = "left",
+    font_size = 14
+  )
+
+Pr5P7.markers.mast %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log10FC) -> top10
+DoHeatmap(combined.srt, features = top10$gene) + NoLegend()
+```
+
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot(Pr5P7, "Galr1", pt.size = 3, order = T) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot(Pr5P7, "Gal", pt.size = 3, order = T) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r}
+SaveH5Seurat(Pr5P7, 
+             filename = here(data_dir,
+                             "Pr5P7_clusters.h5Seurat"))
+Convert(here(data_dir,
+             "Pr5P7_clusters.h5Seurat"), 
+        dest = "h5ad")
+```
