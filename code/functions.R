@@ -265,9 +265,9 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
         latent.vars = c("var_regex", "log10GenesPerUMI",
                         "S.Score", "G2M.Score"),
         only.pos = TRUE,
-        min.pct = 0.05,
+        min.pct = 0.1,
         base = 10,
-        logfc.threshold = 0.05,
+        logfc.threshold = 0.2,
         test.use = "LR")
 
     if (length(unique(srt.markers.lr$cluster)) > 1) {
@@ -287,9 +287,9 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
         latent.vars = c("var_regex", "log10GenesPerUMI",
                         "S.Score", "G2M.Score"),
         only.pos = TRUE,
-        min.pct = 0.05,
+        min.pct = 0.1,
         base = 10,
-        logfc.threshold = 0.05,
+        logfc.threshold = 0.2,
         test.use = "MAST")
 
     if (length(unique(srt.markers.lr$cluster)) > 1) {

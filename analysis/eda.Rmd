@@ -831,9 +831,9 @@ markers.logreg <-
     verbose = FALSE,
     random.seed = reseed,
     only.pos = TRUE,
-    min.pct = 0.05,
+    min.pct = 0.1,
     base = 10,
-    logfc.threshold = 0.01,
+    logfc.threshold = 0.1,
     densify = TRUE,
     test.use = "LR")
 write_csv(markers.logreg,
@@ -861,9 +861,9 @@ markers.wilcox <-
     verbose = FALSE,
     random.seed = reseed,
     only.pos = TRUE,
-    min.pct = 0.05,
+    min.pct = 0.1,
     base = 10,
-    logfc.threshold = 0.01,
+    logfc.threshold = 0.1,
     densify = TRUE,
     test.use = "wilcox")
 write_csv(markers.wilcox,
