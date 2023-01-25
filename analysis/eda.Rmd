@@ -102,7 +102,7 @@ cell_bender_merged <-
   Read_CellBender_h5_Multi_Directory(
     base_path = here("cellbender"),
     custom_name = "_output_filtered.h5",
-    sample_names = c("THP7", "Pr5P7"),
+    sample_names = sort(c("THP7", "Pr5P7")), # must be sorted as the function internally doesn't index output of list.dir so can't reorder or subset
     merge = TRUE)
 
 cell_ranger_merged <-
@@ -111,7 +111,7 @@ cell_ranger_merged <-
     default_10X_path = TRUE,
     h5_filename = "filtered_feature_bc_matrix.h5",
     merge = TRUE,
-    sample_names = c("THP7", "Pr5P7"),
+    sample_names = sort(c("THP7", "Pr5P7")), # must be sorted as the function internally doesn't index output of list.dir so can't reorder or subset
     parallel = TRUE, 
     num_cores = 16)
 
@@ -281,17 +281,17 @@ VlnPlot(subset(combined.srt, subset = QC == 'Pass'),
   theme(plot.title = element_text(size=16))
 ```
 
-```{r fig.align='center', fig.asp=.309, fig.width=9}
+```{r pl-init-dr, fig.align='center', fig.asp=1.618, fig.width=9}
 combined.srt <- NormalizeData(combined.srt)
 combined.srt <- 
   FindVariableFeatures(
     combined.srt, 
     selection.method = "vst",
     nfeatures = 3000)
-top10 <- head(VariableFeatures(combined.srt), 10)
-top10
+top20 <- head(VariableFeatures(combined.srt), 20)
+top20
 plot5 <- VariableFeaturePlot(combined.srt)
-LabelPoints(plot = plot5, points = top10, repel = TRUE, xnudge = 0, ynudge = 0)
+LabelPoints(plot = plot5, points = top20, repel = TRUE, xnudge = 0, ynudge = 0)
 all.genes <- rownames(combined.srt)
 hvg <- VariableFeatures(combined.srt)
 var_regex <- '^Hla-|^Ig[hjkl]|^Rna|^mt-|^Rp[sl]|^Hb[^(p)]|^Gm'
@@ -311,7 +311,7 @@ VizDimLoadings(combined.srt, dims = 1:9, reduction = "pca") &
   theme(axis.text = element_text(size = 5),
         axis.title = element_text(size = 8, face = "bold"))
 DimHeatmap(combined.srt, dims = 1:6, nfeatures = 20, cells = 500, balanced = T)
-DimPlot(combined.srt, reduction = "pca")
+DimPlot_scCustom(combined.srt, reduction = "pca")
 ElbowPlot(combined.srt)
 combined.srt <-
   JackStraw(
@@ -389,12 +389,18 @@ plot_clustree(
   plot.ref = FALSE
 )
 
+```
+
+
+```{r pl-mrtree-init, fig.align='center', fig.asp=.309, fig.width=9}
 out <-  mrtree(
   combined.srt,
   prefix = 'RNA_snn_res.',
   n.cores = n_cores,
   consensus = FALSE,
-  augment.path = FALSE
+  sample.weighted = TRUE,
+  augment.path = FALSE,
+  verbose = FALSE
 )
 # if there are few partitions per k, within resolution consensus step can speed up the algorithm
 # weight per sample is encoraged if the classes are imbalanced
@@ -481,23 +487,38 @@ combined.srt$k_tree <- out$labelmat.mrtree[, which.min(
       out$labelmat.mrtree)[[2]], "K"
     )
   ) - resK)
-)]
-p1 <- DimPlot(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
-p2 <- DimPlot(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
+)] %>% as.numeric() %>% as.factor()
+```
+
+```{r pl-umap-clusters, fig.align='center', fig.asp=.309, fig.width=9}
+p1 <- DimPlot_scCustom(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
+p2 <- DimPlot_scCustom(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
 
 p1 | p2
 
 Idents(combined.srt) <- "k_tree"
 ```
 
-```{r fig.align='center', fig.asp=.618, fig.width=5}
-FeaturePlot(combined.srt, features = "percent_mt") & 
-  theme(plot.title = element_text(size = 16)) & 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
 
-FeaturePlot(combined.srt, features = "nFeature_RNA") & 
-  theme(plot.title = element_text(size = 16)) & 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+combined.srt <-
+  Store_Palette_Seurat(
+    seurat_object = combined.srt,
+    palette = rev(brewer.pal(n = 11, name = "RdYlGn")),
+    palette_name = "mdat_Colour_Pal")
+combined.srt <-
+  Store_Palette_Seurat(
+    seurat_object = combined.srt,
+    palette = rev(brewer.pal(n = 11, name = "Spectral")),
+    palette_name = "expr_Colour_Pal")
+
+FeaturePlot_scCustom(combined.srt, features = "percent_mt", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
+  theme(plot.title = element_text(size = 16))
+
+FeaturePlot_scCustom(combined.srt, features = "percent_mt", colors_use = combined.srt@misc$mdat_Colour_Pal, na_cutoff = 5)
+
+FeaturePlot_scCustom(combined.srt, features = "nFeature_RNA", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
+  theme(plot.title = element_text(size = 16))
 ```
 
 ### Dual Assay Plotting
@@ -508,26 +529,34 @@ combined.srt <- NormalizeData(combined.srt, assay = "RAW")
 ```
 
 ```{r echo=FALSE, fig.height=4, fig.width=10, fig.align='center'}
-FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Galr1", assay1 = "RNA", assay2 = "RAW") & 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) & theme(plot.title = element_text(size = 24))
+FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Galr1", assay1 = "RNA", assay2 = "RAW", colors_use = combined.srt@misc$expr_Colour_Pal) & 
+  theme(plot.title = element_text(size = 24))
 ```
 
 ```{r echo=FALSE, fig.height=4, fig.width=10, fig.align='center'}
-FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Gal", assay1 = "RNA", assay2 = "RAW") & 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) & theme(plot.title = element_text(size = 24))
+FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Gal", assay1 = "RNA", assay2 = "RAW", colors_use = combined.srt@misc$expr_Colour_Pal) & 
+  theme(plot.title = element_text(size = 24))
 ```
 Both targets look fine.
 
 ```{r}
-DimPlot(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
+DimPlot_scCustom(combined.srt, pt.size = 3, group.by = "QC")
+```
+
+```{r}
+DimPlot_scCustom(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
 ```
 
 ```{r}
 combined.srt <- subset(combined.srt, subset = QC == 'Pass')
-DimPlot(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
+DimPlot_scCustom(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
 ```
+
+
 ### Reevaluate after subsetting low-quality cells
+
 ```{r}
+combined.srt$comb_clstr1 <- Idents(combined.srt)
 s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
 g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
 
@@ -539,9 +568,8 @@ table(combined.srt[[]]$Phase)
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-FeaturePlot(combined.srt,features = "percent_mt", label.size = 4, repel = T, pt.size = 3, label = T)  & 
-  theme(plot.title = element_text(size = 16)) & 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+FeaturePlot_scCustom(combined.srt,features = "percent_mt", label.size = 4, repel = T, pt.size = 3, label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
+  theme(plot.title = element_text(size = 16))
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
@@ -549,10 +577,9 @@ VlnPlot(combined.srt, features = "percent_mt") & theme(plot.title = element_text
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-FeaturePlot(combined.srt, features = "percent_rb",
-            label.size = 4,repel = T,pt.size = 3,label = T)  & 
-  theme(plot.title = element_text(size = 16)) & 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "RdYlGn")))
+FeaturePlot_scCustom(combined.srt, features = "percent_rb",
+            label.size = 4,repel = T,pt.size = 3,label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
+  theme(plot.title = element_text(size = 16))
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
@@ -573,7 +600,7 @@ FeaturePlot(combined.srt,
   theme(plot.title = element_text(size = 16))
 ```
 
-```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+```{r fig.align='center', fig.width=7, fig.asp = 0.618}
 VlnPlot(combined.srt,
         features = c("S.Score", "G2M.Score")) &
   theme(plot.title = element_text(size=16))
@@ -610,7 +637,7 @@ combined.srt <- combined.srt %>%
 print(combined.srt[["pca"]], dims = 1:5, nfeatures = 5)
 ```
 
-```{r pl-pca-loadings, fig.height=8, fig.width=6}
+```{r pl-pca-loadings, fig.asp=1.618, fig.width=8}
 VizDimLoadings(combined.srt, dims = 1:4, reduction = "pca")
 ```
 
@@ -662,7 +689,7 @@ combined.srt <-
 Plot by source after clean up
 
 ```{r pl-all-RNA, fig.align='center', fig.width=9, fig.asp = 0.618}
-plEmbCombBatch <- DimPlot(combined.srt, reduction = "umap",
+plEmbCombBatch <- DimPlot_scCustom(combined.srt, reduction = "umap",
                           group.by = "orig.ident", pt.size = 3,
                           label = TRUE, repel = TRUE) + NoLegend()
 plEmbCombBatch
@@ -702,7 +729,9 @@ out <-  mrtree(
   prefix = 'SCT_snn_res.',
   n.cores = n_cores,
   consensus = FALSE,
-  augment.path = FALSE
+  sample.weighted = TRUE,
+  augment.path = FALSE,
+  verbose = FALSE
 )
 # if there are few partitions per k, within resolution consensus step can speed up the algorithm
 # weight per sample is encoraged if the classes are imbalanced
@@ -797,24 +826,25 @@ combined.srt$k_tree <- out$labelmat.mrtree[, which.min(
       out$labelmat.mrtree)[[2]], "K"
     )
   ) - resK)
-)]
-p1 <- DimPlot(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
-p2 <- DimPlot(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
+)] %>% as.numeric() %>% as.factor()
+p1 <- DimPlot_scCustom(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
+p2 <- DimPlot_scCustom(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
 
 p1 | p2
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot(combined.srt, "Galr1", pt.size = 2, order = T) + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
-```
-```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot(combined.srt, "Gal", pt.size = 2, order = T) + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+FeaturePlot_scCustom(combined.srt, "Galr1", pt.size = 2, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+  ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
 ```
 
-```{r, fig.asp=1.818, fig.width=2.4}
-DotPlot(combined.srt, assay = "RNA", features = c("Galr1", "Gal"), split.by = "orig.ident")
+```{r fig.align='center', fig.width=5, fig.asp = 0.618}
+FeaturePlot_scCustom(combined.srt, "Gal", pt.size = 2, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+  ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r, fig.asp=.2, fig.width=16}
+DotPlot_scCustom(seurat_object = combined.srt, assay = "RNA", features = c("Galr1", "Gal"), flip_axes = T, x_lab_rotate = TRUE, split.by = "orig.ident")
 ```
 
 We see the spread of our targets across derived clusters, which isn't optimal. Lets see if we will see some significant hits with proper statistical testing.
@@ -885,7 +915,16 @@ markers.wilcox %>%
 
 ```
 
-```{r pl-heatmap, fig.width = 18, fig.asp = 0.868}
+```{r include=FALSE, fig.align='center', fig.height=10, fig.width=10}
+top5_markers <- Extract_Top_Markers(marker_dataframe = markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE)
+pl_clst_dotplot <- Clustered_DotPlot(seurat_object = combined.srt, features = top5_markers)
+```
+
+```{r pl_clst_dotplot, echo=FALSE, fig.align='center', fig.height=10, fig.width=10}
+pl_clst_dotplot[[2]]
+```
+
+```{r pl-heatmap, fig.width = 18, fig.asp = 1.1}
 markers.logreg %>%
     group_by(cluster) %>%
     top_n(n = 10, wt = avg_log10FC) -> top10
@@ -900,12 +939,13 @@ It seems that we should split datasets despite the fact that they're derived fro
 DefaultAssay(combined.srt) <- "RNA"
 srt.list <- SplitObject(combined.srt,
                         split.by = "orig.ident")
-c(THP7, Pr5P7) %<-% srt.list
+THP7  <- srt.list[["THP7"]]
+Pr5P7 <- srt.list[["Pr5P7"]]
 ```
 
 
 ## Ventrobasal thalamus
-```{r fig.width = 18, fig.asp = 0.868}
+```{r pl-heatmap-THP7, fig.width = 18, fig.asp = 1.1}
 n_pcs <- 100
 c(THP7, THP7.markers.logreg, THP7.markers.mast)  %<-% DeriveKTree(THP7)
 
@@ -938,31 +978,42 @@ THP7.markers.mast %>%
 THP7.markers.mast %>%
     group_by(cluster) %>%
     top_n(n = 10, wt = avg_log10FC) -> top10
-DoHeatmap(combined.srt, features = top10$gene) + NoLegend()
+DoHeatmap(THP7, features = top10$gene) + NoLegend()
+```
+
+```{r include=FALSE, fig.align='center', fig.height=10, fig.width=10}
+THP7.top5_markers <- Extract_Top_Markers(marker_dataframe = THP7.markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE)
+pl_clst_dotplot_THP7 <- Clustered_DotPlot(seurat_object = THP7, features = THP7.top5_markers)
+```
+
+```{r pl_clst_dotplot_THP7, echo=FALSE, fig.align='center', fig.height=10, fig.width=10}
+pl_clst_dotplot_THP7[[2]]
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot(THP7, "Galr1", pt.size = 3, order = T) + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
+FeaturePlot_scCustom(THP7, "Galr1", pt.size = 3, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+  ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot(THP7, "Gal", pt.size = 3, order = T) + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+FeaturePlot_scCustom(THP7, "Gal", pt.size = 3, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+  ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
 ```
 
 ```{r}
 SaveH5Seurat(THP7, 
              filename = here(data_dir,
-                             "THP7_clusters.h5Seurat"))
+                             "THP7_clusters.h5Seurat"),
+             overwrite = TRUE)
 Convert(here(data_dir,
              "THP7_clusters.h5Seurat"), 
-        dest = "h5ad")
+        dest = "h5ad",
+        overwrite = TRUE)
 ```
 
 
 ## Principal sensory trigeminal nucleus 
-```{r fig.width = 18, fig.asp = 0.868}
+```{r pl-heatmap-Pr5P7, fig.width = 18, fig.asp = 1.1}
 n_pcs <- 100
 c(Pr5P7, Pr5P7.markers.logreg, Pr5P7.markers.mast)  %<-% DeriveKTree(Pr5P7)
 
@@ -995,24 +1046,35 @@ Pr5P7.markers.mast %>%
 Pr5P7.markers.mast %>%
     group_by(cluster) %>%
     top_n(n = 10, wt = avg_log10FC) -> top10
-DoHeatmap(combined.srt, features = top10$gene) + NoLegend()
+DoHeatmap(Pr5P7, features = top10$gene) + NoLegend()
+```
+
+```{r include=FALSE, fig.align='center', fig.height=10, fig.width=10}
+Pr5P7.top5_markers <- Extract_Top_Markers(marker_dataframe = Pr5P7.markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE)
+pl_clst_dotplot_Pr5P7 <- Clustered_DotPlot(seurat_object = Pr5P7, features = Pr5P7.top5_markers)
+```
+
+```{r pl_clst_dotplot_Pr5P7, echo=FALSE, fig.align='center', fig.height=10, fig.width=10}
+pl_clst_dotplot_Pr5P7[[2]]
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot(Pr5P7, "Galr1", pt.size = 3, order = T) + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
+FeaturePlot_scCustom(Pr5P7, "Galr1", pt.size = 3, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+  ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot(Pr5P7, "Gal", pt.size = 3, order = T) + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
+FeaturePlot_scCustom(Pr5P7, "Gal", pt.size = 3, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+  ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
 ```
 
 ```{r}
 SaveH5Seurat(Pr5P7, 
              filename = here(data_dir,
-                             "Pr5P7_clusters.h5Seurat"))
+                             "Pr5P7_clusters.h5Seurat"),
+             overwrite = TRUE)
 Convert(here(data_dir,
              "Pr5P7_clusters.h5Seurat"), 
-        dest = "h5ad")
+        dest = "h5ad",
+        overwrite = TRUE)
 ```

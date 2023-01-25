@@ -214,7 +214,9 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
     prefix = 'RNA_snn_res.',
     n.cores = n.cores,
     consensus = FALSE,
-    augment.path = FALSE
+    sample.weighted = TRUE,
+    augment.path = FALSE,
+    verbose = FALSE
   )
 
   # Adjusted Multiresolution Rand Index (AMRI)
@@ -252,7 +254,7 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
         out$labelmat.mrtree)[[2]], "K"
       )
     ) - resK)
-  )]
+  )] %>% as.numeric() %>% as.factor()
 
   Idents(srt) <- "k_tree"
   if (length(unique(srt$k_tree)) > 1) {
