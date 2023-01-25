@@ -19,3 +19,4 @@ souporcell/*
 fastq/*
 *.sif
 *.h5Seurat
+*.h5ad
