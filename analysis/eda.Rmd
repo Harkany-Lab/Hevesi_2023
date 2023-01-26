@@ -186,102 +186,269 @@ stress_genes <-
   str_to_title(c('Rpl26','Gstp1','Rpl35a','Erh',
                  'Slc25a5','Pgk1','Eno1',
                  'Tubb2a','Emc4','Scg5')) %>% .[. %in% rownames(combined.srt)]
-combined.srt[["percent_mt"]] <- PercentageFeatureSet(combined.srt, pattern = "^mt-")
-combined.srt[["percent_rb"]] <- PercentageFeatureSet(combined.srt, pattern = "^Rp[sl]")
-combined.srt[["percent_hb"]] <- PercentageFeatureSet(combined.srt, pattern = "^Hb[^(p)]")
-combined.srt$log10GenesPerUMI <-
-  log10(combined.srt$nFeature_RNA) / log10(combined.srt$nCount_RNA)
-# Visualize QC metrics as a violin plot
-VlnPlot(combined.srt,
-        features = c("log10GenesPerUMI", "nFeature_RNA", "nCount_RNA",
-                     "percent_mt", "percent_rb", "percent_hb"),
-        ncol = 3) & 
-  theme(plot.title = element_text(size=16))
 
+low.cutoff.gene          <- 500
+high.cutoff.gene         <- NULL
+high.cutoff.gene         <- Inf
+low.cutoff.umis          <- NULL
+low.cutoff.umis          <- -Inf
+high.cutoff.umis         <- 45000
+high.cutoff.pc.mt        <- 5
+high.cutoff.pc.ribo      <- 3
+high.cutoff.pc.hb        <- 0.5
+high.cutoff.logprob.dupl <- NULL
+high.cutoff.complexity   <- 0.8
+
+combined.srt <-
+  Add_Mito_Ribo_Seurat(combined.srt, species = "mouse")
+combined.srt[["percent_hb"]] <- PercentageFeatureSet(combined.srt, pattern = "^Hb[^(p)]")
+combined.srt <-
+  Add_Cell_Complexity_Seurat(combined.srt)
+
+# Visualize QC metrics as a violin plot
+p1 <-
+  QC_Plots_Complexity(
+    combined.srt,
+    high_cutoff = high.cutoff.complexity,
+    color_seed = reseed)
+p2 <-
+  QC_Plots_Genes(
+    combined.srt,
+    low_cutoff = low.cutoff.gene,
+    high_cutoff = high.cutoff.gene,
+    plot_title = "Genes per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p3 <-
+  QC_Plots_UMIs(
+    combined.srt,
+    low_cutoff = low.cutoff.umis,
+    high_cutoff = high.cutoff.umis,
+    plot_title = "UMIs per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p4 <-
+  QC_Plots_Mito(
+    combined.srt,
+    high_cutoff = high.cutoff.pc.mt,
+    plot_title = "Mito genes % per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p5 <-
+  QC_Plots_Feature(
+    combined.srt,
+    feature = "percent_ribo",
+    high_cutoff = high.cutoff.pc.ribo,
+    y_axis_label = "% Ribosomal Genes Counts",
+    plot_title = "Ribo genes % per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p6 <-
+  QC_Plots_Feature(
+    combined.srt,
+    feature = "percent_hb",
+    high_cutoff = high.cutoff.pc.hb,
+    y_axis_label = "% Hemoglobin Genes Counts",
+    plot_title = "Hemoglobin genes % per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+
+wrap_plots(p1, p2, p3, p4, p5, p6, ncol = 3)
 ```
+
 
 ```{r pl-scatter-qc, fig.width=11, fig.asp = 0.8}
-plot1 <- FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "percent_mt") + NoLegend()
-plot2 <- FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + NoLegend()
-plot3 <- FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "percent_rb") + NoLegend()
-plot4 <- FeatureScatter(combined.srt, feature1 = "percent_rb", feature2 = "percent_mt")
+plot1 <- QC_Plot_GenevsFeature(seurat_object = combined.srt, feature1 = "percent_mito", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_feature = high.cutoff.pc.mt, color_seed = reseed, ggplot_default_colors = T) & scale_y_log10()
+plot2 <- QC_Plot_UMIvsGene(seurat_object = combined.srt, low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, low_cutoff_UMI = low.cutoff.umis, high_cutoff_UMI = high.cutoff.umis, color_seed = reseed, ggplot_default_colors = T) & scale_x_log10() & scale_y_log10()
+plot3 <- QC_Plot_GenevsFeature(seurat_object = combined.srt, feature1 = "percent_ribo", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_feature = high.cutoff.pc.ribo, color_seed = reseed, ggplot_default_colors = T) & scale_y_log10()
+plot4 <- FeatureScatter(combined.srt, feature1 = "percent_ribo", feature2 = "percent_mito", shuffle = T)
 (plot1 + plot2) / (plot3 + plot4)
 ```
+
+```{r pl-scatter-qc-comb, fig.height=7, fig.width=13, fig.align='center'}
+QC_Plot_UMIvsGene(seurat_object = combined.srt, meta_gradient_name = "percent_mito", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_UMI = high.cutoff.umis, meta_gradient_low_cutoff = high.cutoff.pc.mt, combination = TRUE, color_seed = reseed, ggplot_default_colors = T) & scale_x_log10() & scale_y_log10()
+```
+
 
 ```{r pl-scatter-doublets-log-prob, echo=FALSE}
 combined.srt$cell_name <- colnames(combined.srt)
 if (any(sum(combined.srt$cell_name %in% souporcell$cell_name))) {
-  combined.srt@meta.data %<>%
+  combined.srt@meta.data <- 
+    combined.srt@meta.data %>%
     left_join(souporcell,
-              by = c("cell_name" = "cell_name",
-                     "orig.ident" = "origin"))
-  combined.srt[['QC']] <-
-    ifelse(combined.srt@meta.data$status == 'doublet','Doublet','Pass')
-  FeatureScatter(combined.srt, feature1 = "nFeature_RNA", feature2 = "log_prob_doublet")
+              by = c("cell_name",
+                     "orig.ident" = "origin")) %>%
+    mutate(QC = ifelse(
+      test = status %in% c("doublet"),
+      yes = "Doublet",
+      no = "Pass"))
+  rownames(combined.srt@meta.data) <- colnames(combined.srt)
+  FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "log_prob_doublet", shuffle = T)
 } else {
-  combined.srt[['QC']] <- "Pass"
+  combined.srt$QC <- "Pass"
 }
 
 ```
 
 ```{r}
-combined.srt[['QC']] <-
+combined.srt$QC <-
   ifelse(
-    combined.srt@meta.data$nFeature_RNA < 500 &
+    combined.srt@meta.data$log10GenesPerUMI < high.cutoff.complexity &
+      combined.srt@meta.data$QC == 'Pass',
+    'Low_Complexity',
+    combined.srt@meta.data$QC
+  )
+combined.srt$QC <-
+  ifelse(
+    combined.srt@meta.data$log10GenesPerUMI < high.cutoff.complexity &
+      combined.srt@meta.data$QC != 'Pass' &
+      combined.srt@meta.data$QC != 'Low_Complexity',
+    paste('Low_Complexity', combined.srt@meta.data$QC, sep = ','),
+    combined.srt@meta.data$QC
+  )
+combined.srt$QC <-
+  ifelse(
+    combined.srt@meta.data$nFeature_RNA < low.cutoff.gene &
       combined.srt@meta.data$QC == 'Pass',
     'Low_nFeature',
     combined.srt@meta.data$QC
   )
-combined.srt[['QC']] <-
+combined.srt$QC <-
   ifelse(
-    combined.srt@meta.data$nFeature_RNA < 500 &
+    combined.srt@meta.data$nFeature_RNA < low.cutoff.gene &
       combined.srt@meta.data$QC != 'Pass' &
       combined.srt@meta.data$QC != 'Low_nFeature',
     paste('Low_nFeature', combined.srt@meta.data$QC, sep = ','),
     combined.srt@meta.data$QC
   )
-combined.srt[['QC']] <-
+combined.srt$QC <-
   ifelse(
-    combined.srt@meta.data$percent_mt > 5 &
+    combined.srt@meta.data$percent_mito > high.cutoff.pc.mt &
       combined.srt@meta.data$QC == 'Pass',
     'High_MT',
     combined.srt@meta.data$QC
   )
-combined.srt[['QC']] <-
+combined.srt$QC <-
   ifelse(
-    combined.srt@meta.data$percent_mt > 5 &
+    combined.srt@meta.data$percent_mito > high.cutoff.pc.mt &
       combined.srt@meta.data$QC != 'Pass' &
       combined.srt@meta.data$QC != 'High_MT',
     paste('High_MT', combined.srt@meta.data$QC, sep = ','),
     combined.srt@meta.data$QC
   )
-combined.srt[['QC']] <-
+combined.srt$QC <-
   ifelse(
-    combined.srt@meta.data$nCount_RNA > 35000 &
+    combined.srt@meta.data$nCount_RNA > high.cutoff.umis &
       combined.srt@meta.data$QC == 'Pass',
     'High_UMIs',
     combined.srt@meta.data$QC
   )
-combined.srt[['QC']] <-
+combined.srt$QC <-
   ifelse(
-    combined.srt@meta.data$nCount_RNA > 35000 &
+    combined.srt@meta.data$nCount_RNA > high.cutoff.umis &
       combined.srt@meta.data$QC != 'Pass' &
       combined.srt@meta.data$QC != 'High_UMIs',
     paste('High_UMIs', combined.srt@meta.data$QC, sep = ','),
     combined.srt@meta.data$QC
   )
-table(combined.srt[['QC']])
+combined.srt$QC <-
+  ifelse(
+    combined.srt@meta.data$percent_ribo > high.cutoff.pc.ribo &
+      combined.srt@meta.data$QC == 'Pass',
+    'High_Ribo',
+    combined.srt@meta.data$QC
+  )
+combined.srt$QC <-
+  ifelse(
+    combined.srt@meta.data$percent_ribo > high.cutoff.pc.ribo &
+      combined.srt@meta.data$QC != 'Pass' &
+      combined.srt@meta.data$QC != 'High_Ribo',
+    paste('High_Ribo', combined.srt@meta.data$QC, sep = ','),
+    combined.srt@meta.data$QC
+  )
+combined.srt$QC <-
+  ifelse(
+    combined.srt@meta.data$percent_hb > high.cutoff.pc.hb &
+      combined.srt@meta.data$QC == 'Pass',
+    'High_Hgb',
+    combined.srt@meta.data$QC
+  )
+combined.srt$QC <-
+  ifelse(
+    combined.srt@meta.data$percent_hb > high.cutoff.pc.hb &
+      combined.srt@meta.data$QC != 'Pass' &
+      combined.srt@meta.data$QC != 'High_Hgb',
+    paste('High_Hgb', combined.srt@meta.data$QC, sep = ','),
+    combined.srt@meta.data$QC
+  )
+table(combined.srt$QC)
 ```
 
-```{r fig.align='center', fig.width=9, fig.asp = 0.618}
-VlnPlot(subset(combined.srt, subset = QC == 'Pass'), 
-        features = c("log10GenesPerUMI", "nFeature_RNA", "nCount_RNA",
-                     "percent_mt", "percent_rb", "percent_hb"),
-        ncol = 3) & 
-  theme(plot.title = element_text(size=16))
+```{r pl-vln-qc-subset, fig.align='center', fig.width=9, fig.asp = 0.618}
+# Visualize QC metrics as a violin plot again after subset
+combined.subset.srt <- combined.srt
+combined.subset.srt <- subset(combined.subset.srt, subset = QC == "Pass")
+p1 <-
+  QC_Plots_Complexity(
+    seurat_object = combined.subset.srt,
+    color_seed = reseed,
+    ggplot_default_colors = T)
+p2 <-
+  QC_Plots_Genes(
+    seurat_object = combined.subset.srt,
+    low_cutoff = low.cutoff.gene,
+    high_cutoff = high.cutoff.gene,
+    plot_title = "Genes per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p3 <-
+  QC_Plots_UMIs(
+    seurat_object = combined.subset.srt,
+    low_cutoff = low.cutoff.umis,
+    high_cutoff = high.cutoff.umis,
+    plot_title = "UMIs per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p4 <-
+  QC_Plots_Mito(
+    seurat_object = combined.subset.srt,
+    high_cutoff = high.cutoff.pc.mt,
+    plot_title = "Mito genes % per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p5 <-
+  QC_Plots_Feature(
+    seurat_object = combined.subset.srt,
+    feature = "percent_ribo",
+    high_cutoff = high.cutoff.pc.ribo,
+    y_axis_label = "% Ribosomal Genes Counts",
+    plot_title = "Ribo genes % per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p6 <-
+  QC_Plots_Feature(
+    seurat_object = combined.subset.srt,
+    feature = "percent_hb",
+    high_cutoff = high.cutoff.pc.hb,
+    y_axis_label = "% Hemoglobin Genes Counts",
+    plot_title = "Hemoglobin genes % per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+
+wrap_plots(p1, p2, p3, p4, p5, p6, ncol = 3)
 ```
 
-```{r pl-init-dr, fig.align='center', fig.asp=1.618, fig.width=9}
+```{r pl-init-dr, fig.align='center', fig.asp=1.3, fig.width=9}
 combined.srt <- NormalizeData(combined.srt)
 combined.srt <- 
   FindVariableFeatures(
@@ -300,7 +467,7 @@ combined.srt[["var_regex"]] <-
   PercentageFeatureSet(combined.srt, pattern = var_regex)
 combined.srt <- ScaleData(combined.srt,
                           features = all.genes,
-                          vars.to.regress = c("var_regex"))
+                          vars.to.regress = c("log10GenesPerUMI"))
 npcs <-  30
 combined.srt <- RunPCA(combined.srt, 
                features = hvg,
@@ -311,7 +478,7 @@ VizDimLoadings(combined.srt, dims = 1:9, reduction = "pca") &
   theme(axis.text = element_text(size = 5),
         axis.title = element_text(size = 8, face = "bold"))
 DimHeatmap(combined.srt, dims = 1:6, nfeatures = 20, cells = 500, balanced = T)
-DimPlot_scCustom(combined.srt, reduction = "pca")
+DimPlot_scCustom(combined.srt, reduction = "pca", color_seed = reseed, ggplot_default_colors = T, pt.size = 3)
 ElbowPlot(combined.srt)
 combined.srt <-
   JackStraw(
@@ -512,10 +679,10 @@ combined.srt <-
     palette = rev(brewer.pal(n = 11, name = "Spectral")),
     palette_name = "expr_Colour_Pal")
 
-FeaturePlot_scCustom(combined.srt, features = "percent_mt", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
+FeaturePlot_scCustom(combined.srt, features = "percent_mito", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
   theme(plot.title = element_text(size = 16))
 
-FeaturePlot_scCustom(combined.srt, features = "percent_mt", colors_use = combined.srt@misc$mdat_Colour_Pal, na_cutoff = 5)
+FeaturePlot_scCustom(combined.srt, features = "percent_mito", colors_use = combined.srt@misc$mdat_Colour_Pal, na_cutoff = 5)
 
 FeaturePlot_scCustom(combined.srt, features = "nFeature_RNA", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
   theme(plot.title = element_text(size = 16))
@@ -540,15 +707,15 @@ FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Gal", assay1 = "
 Both targets look fine.
 
 ```{r}
-DimPlot_scCustom(combined.srt, pt.size = 3, group.by = "QC")
+DimPlot_scCustom(combined.srt, pt.size = 3, group.by = "QC", repel = T, label = T, label.size = 5)
 ```
 
 ```{r}
-DimPlot_scCustom(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
+DimPlot_scCustom(combined.srt, label.size = 5, repel = T, pt.size = 3, label = T)
 ```
 
 ```{r}
-combined.srt <- subset(combined.srt, subset = QC == 'Pass')
+combined.srt <- subset(combined.srt, subset = QC == "Pass")
 DimPlot_scCustom(combined.srt, label.size = 4, repel = T, pt.size = 3, label = T)
 ```
 
@@ -568,26 +735,58 @@ table(combined.srt[[]]$Phase)
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-FeaturePlot_scCustom(combined.srt,features = "percent_mt", label.size = 4, repel = T, pt.size = 3, label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
+FeaturePlot_scCustom(combined.srt,features = "percent_mito", label.size = 4, repel = T, pt.size = 3, label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
   theme(plot.title = element_text(size = 16))
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-VlnPlot(combined.srt, features = "percent_mt") & theme(plot.title = element_text(size = 16))
+QC_Plots_Mito(
+  combined.srt,
+  high_cutoff = high.cutoff.pc.mt,
+  plot_title = "Mito genes % per Nucleus",
+  color_seed = reseed,
+  ggplot_default_colors = T
+)
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-FeaturePlot_scCustom(combined.srt, features = "percent_rb",
+FeaturePlot_scCustom(combined.srt, features = "percent_ribo",
             label.size = 4,repel = T,pt.size = 3,label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
   theme(plot.title = element_text(size = 16))
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-VlnPlot(combined.srt, features = "percent_rb") & theme(plot.title = element_text(size=16))
+QC_Plots_Feature(
+  combined.srt,
+  feature = "percent_ribo",
+  high_cutoff = high.cutoff.pc.ribo,
+  y_axis_label = "% Ribosomal Genes Counts",
+  plot_title = "Ribo genes % per Nucleus",
+  color_seed = reseed,
+  ggplot_default_colors = T
+)
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-VlnPlot(combined.srt, features = c("nCount_RNA", "nFeature_RNA")) & theme(plot.title = element_text(size = 16))
+p1 <-
+  QC_Plots_Genes(
+    combined.srt,
+    low_cutoff = low.cutoff.gene,
+    high_cutoff = high.cutoff.gene,
+    plot_title = "Genes per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p2 <-
+  QC_Plots_UMIs(
+    combined.srt,
+    low_cutoff = low.cutoff.umis,
+    high_cutoff = high.cutoff.umis,
+    plot_title = "UMIs per Nucleus",
+    color_seed = reseed,
+    ggplot_default_colors = T
+  )
+p1 | p2
 ```
 
 ```{r fig.align='center', fig.width=9, fig.asp = 0.309}
@@ -619,7 +818,7 @@ combined.srt <-
     vst.flavor = "v2",
     ncells = ncol(combined.srt),
     variable.features.n = 3500,
-    vars.to.regress = c("var_regex", "log10GenesPerUMI",
+    vars.to.regress = c("log10GenesPerUMI",
                         "S.Score", "G2M.Score"),
     return.only.var.genes = FALSE,
     seed.use = reseed,
