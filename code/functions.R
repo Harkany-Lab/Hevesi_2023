@@ -25,7 +25,6 @@ save_my_plot <- function(name,
 
 #' Select mrtree resolution
 SelectResolution <- function(df) {
-
   #' Get distance between two resolutions with top ARI score
   GetTopResDiff <- function(dat) {
     tmp.ari <-
@@ -38,7 +37,6 @@ SelectResolution <- function(df) {
       purrr::pluck(1)
     tmp.ari <- tmp.ari[1] - tmp.ari[2]
     tmp.res <- tmp.res[1] - tmp.res[2]
-
     return(c(tmp.ari, tmp.res))
   }
 
@@ -58,7 +56,6 @@ SelectResolution <- function(df) {
         top_n(n = 1, wt = ari) |>
         purrr::pluck(1)
     }
-
     return(res)
   }
 
@@ -69,7 +66,6 @@ SelectResolution <- function(df) {
     top_n(n = 2, wt = ari) |>
     purrr::pluck(2) |>
     purrr::map_lgl(~ .x == 1)
-
   if (all(ein.check)) {
     df %<>% arrange(-resolution) |> distinct(ari, .keep_all = TRUE)
     c(tmp.ari, tmp.res) %<-% GetTopResDiff(df)
@@ -82,7 +78,6 @@ SelectResolution <- function(df) {
     c(tmp.ari, tmp.res) %<-% GetTopResDiff(df)
     resK <- PickResParam(df, ari.dif = tmp.ari, res.dif = tmp.res)
   }
-
   return(resK)
 }
 
@@ -120,33 +115,27 @@ PCScore <- function(object = srt, PCs = 1:5, score.thresh = 1e-05) {
 
 #' Derive MRTree clustering of Seurat object
 DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
-  plan("multiprocess", workers = n.cores)
-
   srt <- NormalizeData(srt)
   srt <-
     FindVariableFeatures(
       srt,
       selection.method = "vst",
       nfeatures = 3000)
-
   all.genes <- rownames(srt)
   hvg <- VariableFeatures(srt)
   var_regex <- '^Hla-|^Ig[hjkl]|^Rna|^mt-|^Rp[sl]|^Hb[^(p)]|^Gm'
   hvg <- hvg[str_detect(pattern = var_regex, string = hvg, negate = T)]
-
   srt <-
     ScaleData(srt,
               features = all.genes,
               vars.to.regress = c("var_regex", "log10GenesPerUMI",
                                   "S.Score", "G2M.Score"))
-
   srt <-
     RunPCA(srt,
            features = hvg,
            npcs = n.pcs,
            seed.use = vseed,
            verbose = TRUE)
-
   srt <-
     JackStraw(
       object = srt,
@@ -168,8 +157,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
       srt[["pca"]]@stdev
     )[test_pc$Score <= 1e-03 &
         srt[["pca"]]@stdev > quantile(srt[["pca"]]@stdev, .25)]
-  selected_pcs
-
   srt <-
     srt |>
     FindNeighbors(
@@ -195,7 +182,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
       init = "pca",
       seed.use = vseed,
       verbose = FALSE)
-
   resolutions <-
     modularity_event_sampling(
       A = srt@graphs$RNA_snn,
@@ -203,13 +189,11 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
       gamma.min = 0.2,
       gamma.max = 2.50001
     ) # sample based on the similarity matrix
-
   srt <- FindClusters(
     srt, algorithm = 4, method = "igraph",
     resolution = resolutions, random.seed = vseed,
     verbose = FALSE)
-
-  out <-  mrtree(
+  out <- mrtree(
     srt,
     prefix = 'RNA_snn_res.',
     n.cores = n.cores,
@@ -218,7 +202,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
     augment.path = FALSE,
     verbose = FALSE
   )
-
   # Adjusted Multiresolution Rand Index (AMRI)
   ks.flat <-  apply(
     out$labelmat.flat,
@@ -237,7 +220,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
   amri.flat <- aggregate(amri.flat, by = list(k = ks.flat), FUN = mean)
   amri.recon <- sapply(1:ncol(out$labelmat.mrtree), function(i)
     AMRI(out$labelmat.mrtree[, i], srt$seurat_clusters)$amri)
-
   df <- rbind(
     data.frame(
       k = amri.flat$k,
@@ -255,7 +237,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
       )
     ) - resK)
   )] %>% as.numeric() %>% as.factor()
-
   Idents(srt) <- "k_tree"
   if (length(unique(srt$k_tree)) > 1) {
     srt.markers.lr <-
@@ -271,15 +252,12 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
         base = 10,
         logfc.threshold = 0.2,
         test.use = "LR")
-
     if (length(unique(srt.markers.lr$cluster)) > 1) {
       write_csv(
         srt.markers.lr,
         here(tables_dir,
              sprintf('%s_all-mrk_logreg.csv',
                      unique(srt$orig.ident))))}
-
-
     srt.markers.mast <-
       FindAllMarkers(
         srt,
@@ -293,7 +271,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
         base = 10,
         logfc.threshold = 0.2,
         test.use = "MAST")
-
     if (length(unique(srt.markers.lr$cluster)) > 1) {
       write_csv(
         srt.markers.lr,
@@ -301,8 +278,6 @@ DeriveKTree <- function(srt, n.pcs = n_pcs, vseed = reseed, n.cores = n_cores) {
              sprintf('%s_all-mrk_mast.csv',
                      unique(srt$orig.ident))))}
   }
-
-  plan(sequential)
   return(list(srt, srt.markers.lr, srt.markers.mast))
 }
 

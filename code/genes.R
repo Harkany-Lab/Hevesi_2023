@@ -13,20 +13,21 @@ np <- c('Adcyap1', 'Oxt', 'Avp', 'Tac1', 'Pomc', 'Pnoc', 'Tac2',
         'Npw', 'Npvf', 'Ghrh', 'Grp', 'Vip', 'Nms', 'Nmu', 'Nmb',
         'Kiss1', 'Crh', 'Bdnf', 'Cntf', 'Cck')
 
-irs_genes <- c('Alk', 'Insr', 'Ltk', 'Igf1r', 'Irs1',
-               'Ptn', 'Mdk', 'Fam150a', 'Fam150b',
-               'Mc4r', 'Lepr', 'Sim1', 'Lmo4',
-               'Slc2a1', 'Slc2a3')
-
 neurotrans <- c('Slc17a6', 'Slc17a7', 'Slc17a8', 'Slc1a1', 'Slc1a2', 'Slc1a6',
                 'Gad1', 'Slc32a1', 'Slc6a1')
 glut       <- c('Slc17a6', 'Slc17a7', 'Slc17a8', 'Slc1a1', 'Slc1a2', 'Slc1a6')
 gaba       <- c('Gad1', 'Gad2', 'Slc32a1', 'Slc6a1')
 dopam      <- c('Th', 'Slc6a3', 'Slc18a2', 'Ddc',  'Slc18a3')
 ach        <- c('Chat', 'Slc18a3', 'Ache', 'Slc5a7')
-mcr_genes  <- c('Mc1r', 'Mc2r', 'Mc3r', 'Mc4r')
-pvn_genes  <- c('Trh', 'Crh', 'Mbnl3', 'Pgf', 'Irs4', 'Gpr101', 'Nr3c2', 'Agtr1')
-dmh_trh_g  <- c('Onecut3', 'Cartpt')
+genes.zh   <- c("Rbfox3", "Gja1", "Aqp4", "Slc1a3", "Gfap", "Slc17a6", "Slc17a7",
+                "Gad1", "Gad2", "Slc18a2", "Plcb1", "Prkaca", "Adcy1", "Grin1", "Gap43",
+                "Galr1", "Galr2", "Galr3", "Lmx1b", "Bax", "Dcaf5", "Ipo11", "Ntn1",
+                "Slit1", "Slit2", "Robo1", "Dcc", "Nrg1", "Lmo4", "Syngap1",
+                "Nf1", "Grm5", "Rfx3", "Ache", "Sox2", "Sox4", "Sox5",
+                "Lamp", "Cad6", "Cad8", "Cad11", "Efna5", "Epha3", "Epha8",
+                "Ephb2", "Ephb3", "Maoa", "Htr1b", "Slc6a4",
+                "Jam2", "Galnt14", "Hs6st3", "Zfhx4", "Cck", "Lef1", "Ebf1",
+                "Pou2f2", "Vgf", "Vegfc", "Gal")
 
-gene_int <- c(npr, np, irs_genes, neurotrans, mcr_genes, pvn_genes, dmh_trh_g) %>% unique()
+gene_int <- c(npr, np, neurotrans, genes.zh) %>% unique()
 

@@ -63,9 +63,9 @@ source(here(src_dir, 'genes.R'))
 source(here(src_dir, 'functions.R'))
 
 # parallelisation
-n_cores <- 100
+n_cores <- 16
 plan("multisession", workers = n_cores)
-options(future.globals.maxSize = 1000000 * 1024^2) # 1000Gb
+options(future.globals.maxSize = 400000 * 1024^2) # 400Gb
 # plan("sequential")
 plan()
 
@@ -187,14 +187,25 @@ stress_genes <-
                  'Slc25a5','Pgk1','Eno1',
                  'Tubb2a','Emc4','Scg5')) %>% .[. %in% rownames(combined.srt)]
 
+combined.srt <-
+  Store_Palette_Seurat(
+    seurat_object = combined.srt,
+    palette = rev(brewer.pal(n = 11, name = "RdYlGn")),
+    palette_name = "mdat_Colour_Pal")
+combined.srt <-
+  Store_Palette_Seurat(
+    seurat_object = combined.srt,
+    palette = rev(brewer.pal(n = 11, name = "Spectral")),
+    palette_name = "expr_Colour_Pal")
+
 low.cutoff.gene          <- 500
 high.cutoff.gene         <- NULL
 high.cutoff.gene         <- Inf
 low.cutoff.umis          <- NULL
 low.cutoff.umis          <- -Inf
 high.cutoff.umis         <- 45000
-high.cutoff.pc.mt        <- 5
-high.cutoff.pc.ribo      <- 3
+high.cutoff.pc.mt        <- 1
+high.cutoff.pc.ribo      <- 1
 high.cutoff.pc.hb        <- 0.5
 high.cutoff.logprob.dupl <- NULL
 high.cutoff.complexity   <- 0.8
@@ -263,19 +274,31 @@ wrap_plots(p1, p2, p3, p4, p5, p6, ncol = 3)
 
 
 ```{r pl-scatter-qc, fig.width=11, fig.asp = 0.8}
-plot1 <- QC_Plot_GenevsFeature(seurat_object = combined.srt, feature1 = "percent_mito", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_feature = high.cutoff.pc.mt, color_seed = reseed, ggplot_default_colors = T) & scale_y_log10()
-plot2 <- QC_Plot_UMIvsGene(seurat_object = combined.srt, low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, low_cutoff_UMI = low.cutoff.umis, high_cutoff_UMI = high.cutoff.umis, color_seed = reseed, ggplot_default_colors = T) & scale_x_log10() & scale_y_log10()
-plot3 <- QC_Plot_GenevsFeature(seurat_object = combined.srt, feature1 = "percent_ribo", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_feature = high.cutoff.pc.ribo, color_seed = reseed, ggplot_default_colors = T) & scale_y_log10()
-plot4 <- FeatureScatter(combined.srt, feature1 = "percent_ribo", feature2 = "percent_mito", shuffle = T)
+plot1 <- QC_Plot_GenevsFeature(seurat_object = combined.srt, feature1 = "percent_mito", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_feature = high.cutoff.pc.mt, color_seed = reseed, ggplot_default_colors = T, pt.size = 4, shuffle_seed = reseed) & scale_y_log10()
+plot2 <- QC_Plot_UMIvsGene(seurat_object = combined.srt, low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, low_cutoff_UMI = low.cutoff.umis, high_cutoff_UMI = high.cutoff.umis, color_seed = reseed, ggplot_default_colors = T, pt.size = 4, shuffle_seed = reseed) & scale_x_log10() & scale_y_log10()
+plot3 <- QC_Plot_GenevsFeature(seurat_object = combined.srt, feature1 = "percent_ribo", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_feature = high.cutoff.pc.ribo, color_seed = reseed, ggplot_default_colors = T, pt.size = 4, shuffle_seed = reseed) & scale_y_log10()
+plot4 <- FeatureScatter(combined.srt, feature1 = "percent_ribo", feature2 = "percent_mito", shuffle = T, pt.size = 4, seed = reseed)
 (plot1 + plot2) / (plot3 + plot4)
 ```
 
 ```{r pl-scatter-qc-comb, fig.height=7, fig.width=13, fig.align='center'}
-QC_Plot_UMIvsGene(seurat_object = combined.srt, meta_gradient_name = "percent_mito", low_cutoff_gene = low.cutoff.gene, high_cutoff_gene = high.cutoff.gene, high_cutoff_UMI = high.cutoff.umis, meta_gradient_low_cutoff = high.cutoff.pc.mt, combination = TRUE, color_seed = reseed, ggplot_default_colors = T) & scale_x_log10() & scale_y_log10()
+QC_Plot_UMIvsGene(seurat_object = combined.srt,
+                  meta_gradient_name = "percent_mito",
+                  low_cutoff_gene = low.cutoff.gene,
+                  high_cutoff_gene = high.cutoff.gene,
+                  high_cutoff_UMI = high.cutoff.umis,
+                  meta_gradient_low_cutoff = high.cutoff.pc.mt,
+                  meta_gradient_color = combined.srt@misc$mdat_Colour_Pal,
+                  combination = TRUE,
+                  color_seed = reseed,
+                  ggplot_default_colors = TRUE,
+                  pt.size = 4,
+                  shuffle_seed = reseed) & 
+  scale_x_log10() & scale_y_log10()
 ```
 
 
-```{r pl-scatter-doublets-log-prob, echo=FALSE}
+```{r pl-scatter-doublets-log-prob, echo=FALSE, fig.height=7, fig.width=13, fig.align='center'}
 combined.srt$cell_name <- colnames(combined.srt)
 if (any(sum(combined.srt$cell_name %in% souporcell$cell_name))) {
   combined.srt@meta.data <- 
@@ -288,7 +311,19 @@ if (any(sum(combined.srt$cell_name %in% souporcell$cell_name))) {
       yes = "Doublet",
       no = "Pass"))
   rownames(combined.srt@meta.data) <- colnames(combined.srt)
-  FeatureScatter(combined.srt, feature1 = "nCount_RNA", feature2 = "log_prob_doublet", shuffle = T)
+  Split_FeatureScatter(
+    seurat_object = combined.srt,
+    feature1 = "nCount_RNA",
+    feature2 = "log_prob_doublet",
+    colors_use = DiscretePalette(n = nlevels(factor(combined.srt$status)),
+                                 palette = "alphabet",
+                                 shuffle = TRUE),
+    split.by = "orig.ident",
+    group.by = "status",
+    num_columns = 2,
+    shuffle = TRUE,
+    pt.size = 4,
+    seed = reseed)
 } else {
   combined.srt$QC <- "Pass"
 }
@@ -455,10 +490,9 @@ combined.srt <-
     combined.srt, 
     selection.method = "vst",
     nfeatures = 3000)
-top20 <- head(VariableFeatures(combined.srt), 20)
-top20
+top100 <- head(VariableFeatures(combined.srt), 100)
 plot5 <- VariableFeaturePlot(combined.srt)
-LabelPoints(plot = plot5, points = top20, repel = TRUE, xnudge = 0, ynudge = 0)
+LabelPoints(plot = plot5, points = top100, repel = TRUE, xnudge = 0, ynudge = 0)
 all.genes <- rownames(combined.srt)
 hvg <- VariableFeatures(combined.srt)
 var_regex <- '^Hla-|^Ig[hjkl]|^Rna|^mt-|^Rp[sl]|^Hb[^(p)]|^Gm'
@@ -477,7 +511,7 @@ combined.srt <- RunPCA(combined.srt,
 VizDimLoadings(combined.srt, dims = 1:9, reduction = "pca") & 
   theme(axis.text = element_text(size = 5),
         axis.title = element_text(size = 8, face = "bold"))
-DimHeatmap(combined.srt, dims = 1:6, nfeatures = 20, cells = 500, balanced = T)
+DimHeatmap(combined.srt, dims = 1:9, nfeatures = 20, cells = 500, balanced = T)
 DimPlot_scCustom(combined.srt, reduction = "pca", color_seed = reseed, ggplot_default_colors = T, pt.size = 3)
 ElbowPlot(combined.srt)
 combined.srt <-
@@ -657,8 +691,30 @@ combined.srt$k_tree <- out$labelmat.mrtree[, which.min(
 )] %>% as.numeric() %>% as.factor()
 ```
 
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+QC_Plots_Mito(
+  combined.srt,
+  high_cutoff = high.cutoff.pc.mt,
+  plot_title = "Mito genes % per Nucleus (overclustered)",
+  color_seed = reseed,
+  ggplot_default_colors = T
+)
+```
+
+```{r fig.align='center', fig.asp=.618, fig.width=5}
+QC_Plots_Feature(
+  combined.srt,
+  feature = "percent_ribo",
+  high_cutoff = high.cutoff.pc.ribo,
+  y_axis_label = "% Ribosomal Genes Counts",
+  plot_title = "Ribo genes % per Nucleus (overclustered)",
+  color_seed = reseed,
+  ggplot_default_colors = T
+)
+```
+
 ```{r pl-umap-clusters, fig.align='center', fig.asp=.309, fig.width=9}
-p1 <- DimPlot_scCustom(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
+p1 <- DimPlot_scCustom(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised overclustering") + NoLegend()
 p2 <- DimPlot_scCustom(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
 
 p1 | p2
@@ -668,23 +724,12 @@ Idents(combined.srt) <- "k_tree"
 
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-combined.srt <-
-  Store_Palette_Seurat(
-    seurat_object = combined.srt,
-    palette = rev(brewer.pal(n = 11, name = "RdYlGn")),
-    palette_name = "mdat_Colour_Pal")
-combined.srt <-
-  Store_Palette_Seurat(
-    seurat_object = combined.srt,
-    palette = rev(brewer.pal(n = 11, name = "Spectral")),
-    palette_name = "expr_Colour_Pal")
-
-FeaturePlot_scCustom(combined.srt, features = "percent_mito", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
+FeaturePlot_scCustom(combined.srt, features = "percent_mito", colors_use = combined.srt@misc$mdat_Colour_Pal, na_cutoff = NA, pt.size = 4, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75) & 
   theme(plot.title = element_text(size = 16))
 
-FeaturePlot_scCustom(combined.srt, features = "percent_mito", colors_use = combined.srt@misc$mdat_Colour_Pal, na_cutoff = 5)
+FeaturePlot_scCustom(combined.srt, features = "percent_mito", colors_use = combined.srt@misc$mdat_Colour_Pal, na_cutoff = 5, pt.size = 4, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75)
 
-FeaturePlot_scCustom(combined.srt, features = "nFeature_RNA", colors_use = combined.srt@misc$mdat_Colour_Pal) & 
+FeaturePlot_scCustom(combined.srt, features = "nFeature_RNA", colors_use = combined.srt@misc$mdat_Colour_Pal, pt.size = 4, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75) & 
   theme(plot.title = element_text(size = 16))
 ```
 
@@ -696,12 +741,12 @@ combined.srt <- NormalizeData(combined.srt, assay = "RAW")
 ```
 
 ```{r echo=FALSE, fig.height=4, fig.width=10, fig.align='center'}
-FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Galr1", assay1 = "RNA", assay2 = "RAW", colors_use = combined.srt@misc$expr_Colour_Pal) & 
+FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Galr1", assay1 = "RNA", assay2 = "RAW", colors_use = combined.srt@misc$expr_Colour_Pal, pt.size = 4, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75) & 
   theme(plot.title = element_text(size = 24))
 ```
 
 ```{r echo=FALSE, fig.height=4, fig.width=10, fig.align='center'}
-FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Gal", assay1 = "RNA", assay2 = "RAW", colors_use = combined.srt@misc$expr_Colour_Pal) & 
+FeaturePlot_DualAssay(seurat_object = combined.srt, features = "Gal", assay1 = "RNA", assay2 = "RAW", colors_use = combined.srt@misc$expr_Colour_Pal, pt.size = 4, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75) & 
   theme(plot.title = element_text(size = 24))
 ```
 Both targets look fine.
@@ -735,7 +780,7 @@ table(combined.srt[[]]$Phase)
 ```
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
-FeaturePlot_scCustom(combined.srt,features = "percent_mito", label.size = 4, repel = T, pt.size = 3, label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
+FeaturePlot_scCustom(combined.srt,features = "percent_mito", label.size = 4, repel = T, pt.size = 3, label = T, colors_use = combined.srt@misc$mdat_Colour_Pal, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75)  & 
   theme(plot.title = element_text(size = 16))
 ```
 
@@ -751,7 +796,7 @@ QC_Plots_Mito(
 
 ```{r fig.align='center', fig.asp=.618, fig.width=5}
 FeaturePlot_scCustom(combined.srt, features = "percent_ribo",
-            label.size = 4,repel = T,pt.size = 3,label = T, colors_use = combined.srt@misc$mdat_Colour_Pal)  & 
+            label.size = 4,repel = T,pt.size = 3,label = T, colors_use = combined.srt@misc$mdat_Colour_Pal, order = TRUE, alpha_na_exp = 0.3, alpha_exp = 0.75)  & 
   theme(plot.title = element_text(size = 16))
 ```
 
@@ -790,12 +835,18 @@ p1 | p2
 ```
 
 ```{r fig.align='center', fig.width=9, fig.asp = 0.309}
-FeaturePlot(combined.srt,
-            features = c("S.Score", "G2M.Score"),
-            label.size = 4,
-            repel = T,
-            pt.size = 3,
-            label = T) & 
+FeaturePlot_scCustom(
+  combined.srt,
+  features = c("S.Score", "G2M.Score"),
+  label.size = 4,
+  repel = T,
+  pt.size = 3,
+  label = T,
+  colors_use = combined.srt@misc$mdat_Colour_Pal,
+  na_cutoff = NA,
+  order = TRUE,
+  alpha_na_exp = 0.3,
+  alpha_exp = 0.75) & 
   theme(plot.title = element_text(size = 16))
 ```
 
@@ -890,7 +941,9 @@ Plot by source after clean up
 ```{r pl-all-RNA, fig.align='center', fig.width=9, fig.asp = 0.618}
 plEmbCombBatch <- DimPlot_scCustom(combined.srt, reduction = "umap",
                           group.by = "orig.ident", pt.size = 3,
-                          label = TRUE, repel = TRUE) + NoLegend()
+                          label = TRUE, repel = TRUE, seed = reseed,
+                          ggplot_default_colors = TRUE, color_seed = reseed,
+                          shuffle = TRUE) + NoLegend()
 plEmbCombBatch
 ```
 
@@ -1026,24 +1079,40 @@ combined.srt$k_tree <- out$labelmat.mrtree[, which.min(
     )
   ) - resK)
 )] %>% as.numeric() %>% as.factor()
-p1 <- DimPlot_scCustom(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised clustering") + NoLegend()
+p1 <- DimPlot_scCustom(combined.srt, label = T, repel = T, pt.size = 2) + ggtitle("Unsupervised overclustering") + NoLegend()
 p2 <- DimPlot_scCustom(combined.srt, label = T, repel = T, group.by = "k_tree", pt.size = 2) + ggtitle("MRTree") + NoLegend()
 
 p1 | p2
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot_scCustom(combined.srt, "Galr1", pt.size = 2, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+FeaturePlot_scCustom(combined.srt, "Galr1", pt.size = 2, order = T, colors_use = combined.srt@misc$expr_Colour_Pal, alpha_na_exp = 0.3, alpha_exp = 0.75) + 
   ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
 ```
 
 ```{r fig.align='center', fig.width=5, fig.asp = 0.618}
-FeaturePlot_scCustom(combined.srt, "Gal", pt.size = 2, order = T, colors_use = combined.srt@misc$expr_Colour_Pal) + 
+FeaturePlot_scCustom(combined.srt, "Gal", pt.size = 2, order = T, colors_use = combined.srt@misc$expr_Colour_Pal, alpha_na_exp = 0.3, alpha_exp = 0.75) + 
   ggtitle("Gal: ") + theme(plot.title = element_text(size = 24))
 ```
 
-```{r, fig.asp=.2, fig.width=16}
-DotPlot_scCustom(seurat_object = combined.srt, assay = "RNA", features = c("Galr1", "Gal"), flip_axes = T, x_lab_rotate = TRUE, split.by = "orig.ident")
+```{r pl-gal-galr1-dotplot-sct, fig.asp=.618, fig.width=16}
+DotPlot_scCustom(
+  seurat_object = combined.srt,
+  assay = "SCT",
+  features = genes.zh,
+  flip_axes = TRUE,
+  x_lab_rotate = TRUE,
+  colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "G"))
+```
+
+```{r pl-gal-galr1-dotplot-rna, fig.asp=.618, fig.width=16}
+DotPlot_scCustom(
+  seurat_object = combined.srt,
+  assay = "RNA",
+  features = genes.zh,
+  flip_axes = TRUE,
+  x_lab_rotate = TRUE,
+  colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"))
 ```
 
 We see the spread of our targets across derived clusters, which isn't optimal. Lets see if we will see some significant hits with proper statistical testing.
@@ -1115,15 +1184,22 @@ markers.wilcox %>%
 ```
 
 ```{r include=FALSE, fig.align='center', fig.height=10, fig.width=10}
-top5_markers <- Extract_Top_Markers(marker_dataframe = markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE)
+top5_markers <- Extract_Top_Markers(marker_dataframe = markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE, rank_by = "avg_log10FC")
 pl_clst_dotplot <- Clustered_DotPlot(seurat_object = combined.srt, features = top5_markers)
+
+# markers
+Iterate_FeaturePlot_scCustom(seurat_object = combined.srt, gene_list = top5_markers, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/combined_top5_umap", file_type = ".pdf")
+# stress
+Iterate_FeaturePlot_scCustom(seurat_object = combined.srt, gene_list = stress_genes, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/combined_stress_umap", file_type = ".pdf")
+# sex
+Iterate_FeaturePlot_scCustom(seurat_object = combined.srt, gene_list = sex_genes, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/combined_sex_umap", file_type = ".pdf")
 ```
 
 ```{r pl_clst_dotplot, echo=FALSE, fig.align='center', fig.height=10, fig.width=10}
 pl_clst_dotplot[[2]]
 ```
 
-```{r pl-heatmap, fig.width = 18, fig.asp = 1.1}
+```{r pl-heatmap, fig.width = 18, fig.asp = 1.33}
 markers.logreg %>%
     group_by(cluster) %>%
     top_n(n = 10, wt = avg_log10FC) -> top10
@@ -1144,7 +1220,13 @@ Pr5P7 <- srt.list[["Pr5P7"]]
 
 
 ## Ventrobasal thalamus
-```{r pl-heatmap-THP7, fig.width = 18, fig.asp = 1.1}
+```{r pl-heatmap-THP7, fig.width = 18, fig.asp = 1.33}
+plan("sequential")
+invisible(gc())
+plan("multisession", workers = 4)
+n_cores <- 4
+options(future.globals.maxSize = 8000 * 1024^2)
+
 n_pcs <- 100
 c(THP7, THP7.markers.logreg, THP7.markers.mast)  %<-% DeriveKTree(THP7)
 
@@ -1181,8 +1263,15 @@ DoHeatmap(THP7, features = top10$gene) + NoLegend()
 ```
 
 ```{r include=FALSE, fig.align='center', fig.height=10, fig.width=10}
-THP7.top5_markers <- Extract_Top_Markers(marker_dataframe = THP7.markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE)
+THP7.top5_markers <- Extract_Top_Markers(marker_dataframe = THP7.markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE, rank_by = "avg_log10FC")
 pl_clst_dotplot_THP7 <- Clustered_DotPlot(seurat_object = THP7, features = THP7.top5_markers)
+
+# markers
+Iterate_FeaturePlot_scCustom(seurat_object = THP7, gene_list = THP7.top5_markers, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/THP7_top5_umap", file_type = ".pdf")
+# stress
+Iterate_FeaturePlot_scCustom(seurat_object = THP7, gene_list = stress_genes, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/THP7_stress_umap", file_type = ".pdf")
+# sex
+Iterate_FeaturePlot_scCustom(seurat_object = THP7, gene_list = sex_genes, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/THP7_sex_umap", file_type = ".pdf")
 ```
 
 ```{r pl_clst_dotplot_THP7, echo=FALSE, fig.align='center', fig.height=10, fig.width=10}
@@ -1212,7 +1301,13 @@ Convert(here(data_dir,
 
 
 ## Principal sensory trigeminal nucleus 
-```{r pl-heatmap-Pr5P7, fig.width = 18, fig.asp = 1.1}
+```{r pl-heatmap-Pr5P7, fig.width = 18, fig.asp = 1.33}
+plan("sequential")
+invisible(gc())
+plan("multisession", workers = 4)
+n_cores <- 4
+options(future.globals.maxSize = 8000 * 1024^2)
+
 n_pcs <- 100
 c(Pr5P7, Pr5P7.markers.logreg, Pr5P7.markers.mast)  %<-% DeriveKTree(Pr5P7)
 
@@ -1249,8 +1344,15 @@ DoHeatmap(Pr5P7, features = top10$gene) + NoLegend()
 ```
 
 ```{r include=FALSE, fig.align='center', fig.height=10, fig.width=10}
-Pr5P7.top5_markers <- Extract_Top_Markers(marker_dataframe = Pr5P7.markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE)
+Pr5P7.top5_markers <- Extract_Top_Markers(marker_dataframe = Pr5P7.markers.logreg, num_genes = 5, named_vector = FALSE, make_unique = TRUE, rank_by = "avg_log10FC")
 pl_clst_dotplot_Pr5P7 <- Clustered_DotPlot(seurat_object = Pr5P7, features = Pr5P7.top5_markers)
+
+# markers
+Iterate_FeaturePlot_scCustom(seurat_object = Pr5P7, gene_list = Pr5P7.top5_markers, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/Pr5P7_top5_umap", file_type = ".pdf")
+# stress
+Iterate_FeaturePlot_scCustom(seurat_object = Pr5P7, gene_list = stress_genes, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/Pr5P7_stress_umap", file_type = ".pdf")
+# sex
+Iterate_FeaturePlot_scCustom(seurat_object = Pr5P7, gene_list = sex_genes, single_pdf = T, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), pt.size = 3, alpha_exp = 0.75, alpha_na_exp = 0.3, file_path = here(plots_dir), file_name = "/Pr5P7_sex_umap", file_type = ".pdf")
 ```
 
 ```{r pl_clst_dotplot_Pr5P7, echo=FALSE, fig.align='center', fig.height=10, fig.width=10}
