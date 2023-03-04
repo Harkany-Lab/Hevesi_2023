@@ -1212,6 +1212,24 @@ It seems that we should split datasets despite the fact that they're derived fro
 
 ```{r}
 DefaultAssay(combined.srt) <- "RNA"
+combined.srt$comb_clstr2 <- Idents(combined.srt)
+combined.srt@meta.data <-
+  combined.srt@meta.data %>%
+  select(nCount_RNA,
+         nFeature_RNA,
+         log10GenesPerUMI,
+         percent_mito,
+         percent_ribo,
+         percent_hb,
+         var_regex,
+         S.Score,
+         G2M.Score,
+         log_prob_doublet,
+         orig.ident,
+         comb_clstr1,
+         comb_clstr2,
+         QC,
+         cell_name)
 srt.list <- SplitObject(combined.srt,
                         split.by = "orig.ident")
 THP7  <- srt.list[["THP7"]]
@@ -1229,6 +1247,8 @@ options(future.globals.maxSize = 8000 * 1024^2)
 
 n_pcs <- 100
 c(THP7, THP7.markers.logreg, THP7.markers.mast)  %<-% DeriveKTree(THP7)
+Idents(THP7) <- "k_tree"
+THP7$sep_clstr <- Idents(THP7)
 
 THP7.markers.logreg %>%
   group_by(cluster) %>%
@@ -1310,6 +1330,8 @@ options(future.globals.maxSize = 8000 * 1024^2)
 
 n_pcs <- 100
 c(Pr5P7, Pr5P7.markers.logreg, Pr5P7.markers.mast)  %<-% DeriveKTree(Pr5P7)
+Idents(Pr5P7) <- "k_tree"
+Pr5P7$sep_clstr <- Idents(Pr5P7)
 
 Pr5P7.markers.logreg %>%
   group_by(cluster) %>%

@@ -3,15 +3,39 @@ output_dir: ../docs
 navbar:
   title: "Hevesi_2023"
   left:
-  - text: Home
-    href: index.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
+    - text: "Home"
+      href: index.html
+    - text: "About"
+      href: about.html
+    - text: "Analysis"
+      menu:
+        - text: "Exploratory analysis, QC, DR and clustering"
+          href: eda.html
+        - text: "Figures"
+          menu:
+            - text: "Fig.2D. Ventrobasal thalamus"
+              href: figure_2d-THP7.html
+            - text: "Fig.2E. Principal sensory trigeminal nucleus"
+              href: figure_2e-Pr5P7.html
+    - text: "Cell Ranger Reports"
+      menu:
+        - text: "principal sensory trigeminal nucleus"
+          href: Pr5P7_cellranger_summary.html
+        - text: "ventrobasal thalamus"
+          href: THP7_cellranger_summary.html
+    - text: "Methods"
+      href: methods.html
+  right:
+    - text: "License"
+      href: license.html
+    - icon: fa-github
+      href: https://github.com/Harkany-Lab/Hevesi_2023
+
 output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
     theme: cosmo
     highlight: textmate
+    code_folding: hide
+    df_print: paged
