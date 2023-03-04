@@ -1,0 +1,210 @@
+---
+title: "Fig.2D. Ventrobasal thalamus"
+author: "Evgenii O. Tretiakov"
+date: "`r Sys.Date()`"
+output:
+  workflowr::wflow_html:
+    toc: true
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(
+  autodep        = TRUE,
+  cache          = FALSE,
+  cache.lazy     = FALSE,
+  dev            = c("png", "pdf"),
+  echo           = TRUE,
+  error          = FALSE,
+  fig.align      = "center",
+  fig.width      = 14,
+  fig.height     = 12,
+  message        = FALSE,
+  warning        = FALSE
+)
+Sys.setenv(RETICULATE_PYTHON = "/opt/python/3.8.8/bin/python")
+# Load tidyverse infrastructure packages
+suppressPackageStartupMessages({
+  library(here)
+  library(RColorBrewer)
+  library(viridis)
+  library(tidyverse)
+  library(magrittr)
+  library(stringr)
+  library(skimr)
+  library(future)
+  library(zeallot)
+  library(kableExtra)
+  library(reticulate)
+})
+reticulate::use_condaenv("/opt/python/3.8.8/bin/python")
+
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(SeuratWrappers)
+  library(SeuratDisk)
+  library(sctransform)
+  library(glmGamPoi)
+  library(patchwork)
+  library(qs)
+  library(Scillus)
+  library(scCustomize)
+  library(Nebulosa)
+  library(mrtree)
+  library(gprofiler2)
+})
+
+# Set paths
+src_dir    <- here('code')
+data_dir   <- here('data')
+output_dir <- here('output')
+plots_dir  <- here(output_dir, 'figures')
+tables_dir <- here(output_dir, 'tables')
+source(here(src_dir, 'genes.R'))
+source(here(src_dir, 'functions.R'))
+
+# parallelisation
+n_cores <- 16
+plan(multisession, workers = n_cores)
+options(future.globals.maxSize = 400000 * 1024^2) # 400Gb
+
+
+# set seed
+reseed <- 42
+set.seed(seed = reseed)
+
+# ggplot2 theme
+theme_set(ggmin::theme_powerpoint())
+
+```
+
+
+Load dataset
+
+```{r load}
+srt <- LoadH5Seurat(here(data_dir, "THP7_clusters.h5Seurat"))
+Idents(srt) <- "sep_clstr"
+```
+
+We check list of genes based on our prior knowledge.
+
+```{r}
+gene_of_interest <-
+  c("Gal", "Slc17a7", "Slc6a4", "Ache", 
+    "Prkaca", "Adcy1", "Grin1", 
+    "Cck", "Oxt", "Npy", "Sst", "Avp")
+
+genes_present <- Gene_Present(data = srt, gene_list = gene_of_interest)
+genes_present
+```
+
+```{r pl-dotplot-all-rna, fig.align='center', fig.width=4, fig.asp = 0.618}
+DotPlot_scCustom(
+  seurat_object = srt,
+  assay = "RNA",
+  features = genes_present$found_features,
+  flip_axes = TRUE,
+  x_lab_rotate = TRUE,
+  colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"))
+```
+
+```{r pl-clusters, fig.align='center', fig.width=5, fig.asp = 0.618}
+DimPlot_scCustom(
+  srt,
+  label = TRUE,
+  repel = TRUE,
+  pt.size = 2,
+  figure_plot = TRUE
+  ) + ggtitle("Clusters") + NoLegend()
+```
+
+
+```{r pl-feature-slc17a6, fig.align='center', fig.width=5, fig.asp = 0.618}
+p1 <- FeaturePlot_scCustom(
+  srt, "Slc17a6",
+  pt.size = 2,
+  order = TRUE,
+  alpha_exp = 0.65,
+  alpha_na_exp = 0.2,
+  label = TRUE,
+  repel = TRUE,
+  colors_use = srt@misc$expr_Colour_Pal) + 
+  ggtitle("Slc17a6(Vglut2): ") + theme(plot.title = element_text(size = 24))
+p1
+```
+
+```{r pl-density-slc17a6, fig.align='center', fig.width=7, fig.asp = 0.618}
+Plot_Density_Custom(
+  seurat_object = srt,
+  features = "Slc17a6",
+  pt.size = 2) + 
+  ggtitle("Slc17a6(Vglut2): ") + theme(plot.title = element_text(size = 24))
+```
+
+```{r pl-density-slc17a6-gal, fig.align='center', fig.width=7, fig.asp = 0.618}
+Plot_Density_Joint_Only(
+  seurat_object = srt,
+  features = c("Slc17a6", "Gal"),
+  pt.size = 2) + 
+  ggtitle("Slc17a6(Vglut2) + Gal ") + theme(plot.title = element_text(size = 24))
+```
+```{r}
+srt_vglut2 <- subset(srt, idents = c(2, 4, 5, 6, 7), invert = TRUE)
+srt_vglut2 <- subset(srt_vglut2, subset = UMAP_1 > -15 & UMAP_1 < 2)
+```
+
+```{r pl-feature-gal, fig.align='center', fig.width=8, fig.asp = 0.618}
+p2 <- FeaturePlot_scCustom(
+  srt_vglut2, "Gal",
+  pt.size = 5,
+  order = TRUE,
+  alpha_exp = 0.75,
+  alpha_na_exp = 0.05,
+  colors_use = srt@misc$expr_Colour_Pal) + 
+  ggtitle("Gal in Vglut2+ populations") + theme(plot.title = element_text(size = 24))
+p2
+```
+
+```{r pl-density-gal, fig.align='center', fig.width=7, fig.asp = 0.618}
+Plot_Density_Custom(
+  seurat_object = srt_vglut2,
+  features = "Gal",
+  pt.size = 2) + 
+  ggtitle("Gal across Vglut cell-populations only") + theme(plot.title = element_text(size = 24))
+```
+
+```{r pl-density-gal-across-vglut2, fig.align='center', fig.width=7, fig.asp = 0.618}
+Plot_Density_Joint_Only(
+  seurat_object = srt_vglut2,
+  features = c("Slc17a6", "Gal"),
+  pt.size = 2) + 
+  ggtitle("Slc17a6 + Gal across Vglut cell-populations only") + theme(plot.title = element_text(size = 24))
+```
+
+```{r pl-clusters-glut2, fig.align='center', fig.width=7, fig.asp = 0.618}
+DimPlot_scCustom(
+  srt_vglut2,
+  label = TRUE,
+  repel = TRUE,
+  pt.size = 3,
+  figure_plot = TRUE
+  ) + ggtitle("Vglut2+ clusters") + NoLegend()
+```
+
+```{r pl-heatmap-vglut, fig.align='center', fig.width=8, fig.asp = 0.618}
+DoHeatmap(srt_vglut2, features = genes_present$found_features)
+```
+
+```{r pl-dotplot-vglut2-rna, fig.align='center', fig.width=3, fig.asp = 0.618}
+p3 <- DotPlot_scCustom(
+  seurat_object = srt_vglut2,
+  assay = "RNA",
+  features = genes_present$found_features,
+  flip_axes = TRUE,
+  x_lab_rotate = TRUE,
+  colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"))
+p3
+```
+
+```{r pl-fig-2d, fig.align='center', fig.width=18, fig.asp = 0.206}
+p1 | p2 | p3
+```
