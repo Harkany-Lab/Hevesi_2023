@@ -5,6 +5,11 @@ date: "`r Sys.Date()`"
 output:
   workflowr::wflow_html:
     toc: true
+    toc_float: yes
+    theme: cosmo
+    highlight: textmate
+    code_folding: hide
+    df_print: paged
 ---
 
 ```{r setup, echo=FALSE, include=FALSE}
@@ -1141,15 +1146,8 @@ write_csv(markers.logreg,
 markers.logreg %>%
   group_by(cluster) %>%
   slice_max(n = 20, order_by = avg_log10FC) %>%
-  kable("html") %>%
-  kable_material(
-    bootstrap_options = c("bordered",
-                          "condensed",
-                          "responsive",
-                          "striped"),
-    position = "left",
-    font_size = 14
-  )
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
 
 
 markers.wilcox <-
@@ -1170,15 +1168,8 @@ write_csv(markers.wilcox,
 markers.wilcox %>%
   group_by(cluster) %>%
   slice_max(n = 20, order_by = avg_log10FC) %>%
-  kable("html") %>%
-  kable_material(
-    bootstrap_options = c("bordered",
-                          "condensed",
-                          "responsive",
-                          "striped"),
-    position = "left",
-    font_size = 14
-  )
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
 
 
 ```
@@ -1253,28 +1244,14 @@ THP7$sep_clstr <- Idents(THP7)
 THP7.markers.logreg %>%
   group_by(cluster) %>%
   slice_max(n = 20, order_by = avg_log10FC) %>%
-  kable("html") %>%
-  kable_material(
-    bootstrap_options = c("bordered",
-                          "condensed",
-                          "responsive",
-                          "striped"),
-    position = "left",
-    font_size = 14
-  )
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
 
 THP7.markers.mast %>%
   group_by(cluster) %>%
   slice_max(n = 20, order_by = avg_log10FC) %>%
-  kable("html") %>%
-  kable_material(
-    bootstrap_options = c("bordered",
-                          "condensed",
-                          "responsive",
-                          "striped"),
-    position = "left",
-    font_size = 14
-  )
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
 
 THP7.markers.mast %>%
     group_by(cluster) %>%
@@ -1336,28 +1313,14 @@ Pr5P7$sep_clstr <- Idents(Pr5P7)
 Pr5P7.markers.logreg %>%
   group_by(cluster) %>%
   slice_max(n = 20, order_by = avg_log10FC) %>%
-  kable("html") %>%
-  kable_material(
-    bootstrap_options = c("bordered",
-                          "condensed",
-                          "responsive",
-                          "striped"),
-    position = "left",
-    font_size = 14
-  )
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
 
 Pr5P7.markers.mast %>%
   group_by(cluster) %>%
   slice_max(n = 20, order_by = avg_log10FC) %>%
-  kable("html") %>%
-  kable_material(
-    bootstrap_options = c("bordered",
-                          "condensed",
-                          "responsive",
-                          "striped"),
-    position = "left",
-    font_size = 14
-  )
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling(bootstrap_options = c("bordered", "condensed", "responsive", "striped"))  
 
 Pr5P7.markers.mast %>%
     group_by(cluster) %>%

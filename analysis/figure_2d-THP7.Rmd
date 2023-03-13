@@ -45,6 +45,8 @@ suppressPackageStartupMessages({
   library(sctransform)
   library(glmGamPoi)
   library(patchwork)
+  library(UpSetR)
+  library(ggstatsplot)
   library(qs)
   library(Scillus)
   library(scCustomize)
@@ -83,6 +85,8 @@ Load dataset
 ```{r load}
 srt <- LoadH5Seurat(here(data_dir, "THP7_clusters.h5Seurat"))
 Idents(srt) <- "sep_clstr"
+neurons <- subset(srt, subset = Rbfox3 > 0 | Elavl4 > 0 | Snap25 > 0 | Stmn2 > 0)
+gneurons <- subset(neurons, subset = Gal > 0)
 ```
 
 We check list of genes based on our prior knowledge.
@@ -116,6 +120,358 @@ DimPlot_scCustom(
   figure_plot = TRUE
   ) + ggtitle("Clusters") + NoLegend()
 ```
+
+
+
+
+Derive and filter matrix of neurons
+```{r derive-neurons-mtxs}
+mtx_neurons <-
+    gneurons %>%
+    GetAssayData("data", "RNA") %>%
+    as.data.frame() %>%
+    t()
+rownames(mtx_neurons) <- colnames(gneurons)
+
+# Filter features
+filt_low_genes <-
+    colSums(mtx_neurons) %>%
+    .[. > quantile(., 0.4)] %>%
+    names()
+mtx_neurons %<>% .[, filt_low_genes]
+
+min_filt_vector <-
+    mtx_neurons %>%
+    as_tibble() %>%
+    select(all_of(filt_low_genes)) %>%
+    summarise(across(.fns = ~ quantile(.x, .1))) %>%
+    as.list %>%
+    map(as.double) %>%
+    simplify %>%
+    .[colnames(mtx_neurons)]
+
+# Prepare table of intersection sets analysis
+content_mtx_neuro <-
+    (mtx_neurons > min_filt_vector) %>%
+    as_tibble() %>%
+    mutate_all(as.numeric)
+```
+
+Visualise intersections sets that we are going to use (highlighted)
+```{r plot-upset-neuro}
+upset(as.data.frame(content_mtx_neuro),
+  order.by = "freq",
+  sets.x.label = "Number of cells",
+  text.scale = c(2, 1.6, 2, 1.3, 2, 3),
+  nsets = 15,
+  sets = c("Gad1", "Gad2", "Slc32a1", "Slc17a6"),
+  queries = list(
+    list(
+      query = intersects,
+      params = list("Gad1", "Gad2", "Slc32a1"),
+      active = T
+    ),
+    list(
+      query = intersects,
+      params = list("Slc17a6"),
+      active = T
+    )
+  ),
+  nintersects = 60,
+  empty.intersections = "on"
+)
+```
+
+```{r plot-upset-neuro-mod}
+upset(as.data.frame(content_mtx_neuro),
+  order.by = "freq",
+  sets.x.label = "Number of cells",
+  text.scale = c(2, 1.6, 2, 1.3, 2, 3),
+  nsets = 15,
+  sets = c("Gal", "Slc32a1", "Slc17a6"),
+  queries = list(
+    list(
+      query = intersects,
+      params = list("Gal", "Slc32a1"),
+      active = T
+    ),
+    list(
+      query = intersects,
+      params = list("Gal", "Slc17a6"),
+      active = T
+    )
+  ),
+  nintersects = 60,
+  empty.intersections = "on"
+)
+```
+
+
+Make subset of stable neurons
+```{r derive-subset-def-neurons}
+gneurons$gaba_status <-
+  content_mtx_neuro %>%
+  select(Gad1, Gad2, Slc32a1) %>%
+  mutate(gaba = if_all(.fns = ~ .x > 0)) %>%
+  .$gaba
+
+gneurons$gaba_expr <-
+  content_mtx_neuro %>%
+  select(Gad1, Gad2, Slc32a1) %>%
+  mutate(gaba = if_any(.fns = ~ .x > 0)) %>%
+  .$gaba
+
+gneurons$glut_status <-
+  content_mtx_neuro %>%
+  select(Slc17a6) %>%
+  mutate(glut = Slc17a6 > 0) %>%
+  .$glut
+
+neuro_fin <-
+  subset(gneurons,
+    cells = union(
+      WhichCells(gneurons,
+        expression = gaba_status == TRUE & glut_status == FALSE),
+      WhichCells(gneurons,
+        expression = glut_status == TRUE & gaba_expr == FALSE)))
+```
+
+## Check contingency tables for neurotransmitter signature
+```{r check-contingency-neurotransmitter-test-neurons}
+neuro_fin@meta.data %>%
+  janitor::tabyl(glut_status, gaba_status)
+```
+
+
+Make splits of neurons by neurotransmitter signature 
+```{r derive-subsets-by-neurotransmitter-neurons}
+neuro_fin$status <- neuro_fin$gaba_status %>%
+  if_else(true = "GABAergic",
+    false = "glutamatergic")
+Idents(neuro_fin) <- "status"
+SaveH5Seurat(
+  object    = neuro_fin,
+  filename  = here(data_dir, "neuro_fin-THP7"),
+  overwrite = TRUE,
+  verbose   = TRUE
+)
+
+## Split on basis of neurotrans and test for difference
+neuro_fin_neurotrans <- SplitObject(neuro_fin, split.by = "status")
+
+```
+
+## DotPlots grouped by orig.ident
+Expression of GABA receptors in GABAergic Gal positive cells
+```{r plot-dotplot-orig.ident-gabar-gaba-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$GABAergic,
+        features = gabar,
+        group.by = "orig.ident",
+        cols = c("#adffff", "#0084ff"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+Expression of GABA receptors in glutamatergic Gal positive cells
+```{r plot-dotplot-orig.ident-gabar-glu-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$glutamatergic,
+        features = gabar,
+        group.by = "orig.ident",
+        cols = c("#ffc2c2", "#ff3c00"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+Expression of glutamate receptors in GABAergic Gal positive cells
+```{r plot-dotplot-orig.ident-glur-gaba-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$GABAergic,
+        features = glutr,
+        group.by = "orig.ident",
+        cols = c("#adffff", "#0084ff"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+Expression of glutamate receptors in glutamatergic Gal positive cells
+```{r plot-dotplot-orig.ident-glur-glu-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$glutamatergic,
+        features = glutr,
+        group.by = "orig.ident",
+        cols = c("#ffc2c2", "#ff3c00"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+## DotPlots 
+Expression of GABA receptors in GABAergic Gal positive cells
+```{r plot-dotplot-gabar-gaba-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$GABAergic,
+        features = gabar,
+        group.by = "k_tree",
+        cols = c("#adffff", "#0084ff"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+Expression of GABA receptors in glutamatergic Gal positive cells
+```{r plot-dotplot-gabar-glu-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$glutamatergic,
+        features = gabar,
+        group.by = "k_tree",
+        cols = c("#ffc2c2", "#ff3c00"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+Expression of glutamate receptors in GABAergic Gal positive cells
+```{r plot-dotplot-glur-gaba-neurons, fig.width=7, fig.asp=.5}
+DotPlot(object = neuro_fin_neurotrans$GABAergic,
+        features = glutr,
+        group.by = "k_tree",
+        cols = c("#adffff", "#0084ff"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+Expression of glutamate receptors in glutamatergic Gal positive cells
+```{r plot-dotplot-glur-glu-neurons, fig.width=6, fig.asp=.4}
+DotPlot(object = neuro_fin_neurotrans$glutamatergic,
+        features = glutr,
+        group.by = "k_tree",
+        cols = c("#ffc2c2", "#ff3c00"),
+        col.min = -1, col.max = 1
+) + RotatedAxis()
+```
+
+
+```{r drv-sbs-mtx-neurons}
+sbs_mtx_neuro <-
+    neurons %>%
+    GetAssayData("data", "RNA") %>%
+    as.data.frame() %>%
+    t()
+rownames(sbs_mtx_neuro) <- colnames(neurons)
+
+# Filter features
+filt_low_genes2 <-
+    colSums(sbs_mtx_neuro) %>%
+    .[. > quantile(., 0.4)] %>%
+    names()
+sbs_mtx_neuro %<>% .[, filt_low_genes2]
+
+min_filt_vector2 <-
+    sbs_mtx_neuro %>%
+    as_tibble() %>%
+    select(all_of(filt_low_genes2)) %>%
+    summarise(across(.fns = ~ quantile(.x, .005))) %>%
+    as.list %>%
+    map(as.double) %>%
+    simplify %>%
+    .[filt_low_genes2]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx_neuro <-
+    (sbs_mtx_neuro > min_filt_vector2) %>%
+    as_tibble() %>%
+    mutate_all(as.numeric)
+
+
+neurons$gaba_status <-
+  content_sbs_mtx_neuro %>%
+  select(Gad1, Gad2, Slc32a1) %>%
+  mutate(gaba = if_all(.fns = ~ .x > 0)) %>%
+  .$gaba
+
+neurons$gaba_expr <-
+  content_sbs_mtx_neuro %>%
+  select(Gad1, Gad2, Slc32a1) %>%
+  mutate(gaba = if_any(.fns = ~ .x > 0)) %>%
+  .$gaba
+
+neurons$glut_status <-
+  content_sbs_mtx_neuro %>%
+  select(Slc17a6) %>%
+  mutate(glut = Slc17a6 > 0) %>%
+  .$glut
+
+neuro_fin <-
+  subset(neurons,
+    cells = union(
+      WhichCells(neurons,
+        expression = gaba_status == TRUE & glut_status == FALSE),
+      WhichCells(neurons,
+        expression = glut_status == TRUE & gaba_expr == FALSE)))
+
+neuro_fin$status <- neuro_fin$gaba_status %>%
+  if_else(true = "GABAergic",
+    false = "glutamatergic")
+Idents(neuro_fin) <- "status"
+
+sbs_mtx_neuro <-
+    neuro_fin %>%
+    GetAssayData("data", "RNA") %>%
+    as.data.frame() %>%
+    t()
+rownames(sbs_mtx_neuro) <- colnames(neuro_fin)
+
+# Filter features
+filt_low_genes2 <-
+    colSums(sbs_mtx_neuro) %>%
+    .[. > quantile(., 0.4)] %>%
+    names()
+sbs_mtx_neuro %<>% .[, filt_low_genes2]
+
+min_filt_vector2 <-
+    sbs_mtx_neuro %>%
+    as_tibble() %>%
+    select(all_of(filt_low_genes2)) %>%
+    summarise(across(.fns = ~ quantile(.x, .005))) %>%
+    as.list %>%
+    map(as.double) %>%
+    simplify %>%
+    .[filt_low_genes2]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx_neuro <-
+    (sbs_mtx_neuro > min_filt_vector2) %>%
+    as_tibble() %>%
+    mutate_all(as.numeric)
+
+```
+
+
+```{r plot-piecharts-sbs-neuro-chisqr, fig.width=3, fig.asp=2.1}
+
+sbs_mtx_neuro_full <- content_sbs_mtx_neuro |> 
+  select(any_of(c(neurotrans, glutr, gabar, "Gal", "Galr1"))) |> 
+  dplyr::bind_cols(neuro_fin@meta.data)
+
+sbs_mtx_neuro_full |> glimpse()
+
+sbs_mtx_neuro_full$Gal_sign <- 
+  sbs_mtx_neuro_full %>%
+  select(Gal) %>%
+  mutate(Gal_sign = if_any(.fns = ~ .x > 0)) %>%
+  .$Gal_sign
+
+# for reproducibility
+set.seed(reseed)
+# plot
+grouped_ggpiestats(
+  # arguments relevant for `ggpiestats()`
+  data = sbs_mtx_neuro_full,
+  x = Gal_sign,
+  grouping.var = status,
+  perc.k = 1,
+  package = "ggsci",
+  palette = "category10_d3",
+  # arguments relevant for `combine_plots()`
+  title.text = "Molecular specification of thalamic neuronal lineages by Gal signalling and main neurotransmitter expression",
+  caption.text = "Asterisks denote results from proportion tests; \n***: p < 0.001, ns: non-significant",
+  plotgrid.args = list(nrow = 2)
+)
+```
+
 
 
 ```{r pl-feature-slc17a6, fig.align='center', fig.width=5, fig.asp = 0.618}

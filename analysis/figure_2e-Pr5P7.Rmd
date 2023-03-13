@@ -45,6 +45,8 @@ suppressPackageStartupMessages({
   library(sctransform)
   library(glmGamPoi)
   library(patchwork)
+  library(UpSetR)
+  library(ggstatsplot)
   library(qs)
   library(Scillus)
   library(scCustomize)
@@ -83,6 +85,8 @@ Load dataset
 ```{r load}
 srt <- LoadH5Seurat(here(data_dir, "Pr5P7_clusters.h5Seurat"))
 Idents(srt) <- "sep_clstr"
+neurons <- subset(srt, subset = Rbfox3 > 0 | Elavl4 > 0 | Snap25 > 0 | Stmn2 > 0)
+gneurons <- subset(neurons, subset = Galr1 > 0)
 ```
 
 We check list of genes based on our prior knowledge.
@@ -118,6 +122,136 @@ DimPlot_scCustom(
   figure_plot = TRUE
   ) + ggtitle("Clusters") + NoLegend()
 ```
+
+
+
+```{r drv-sbs-mtx-neurons}
+sbs_mtx_neuro <-
+    neurons %>%
+    GetAssayData("data", "RNA") %>%
+    as.data.frame() %>%
+    t()
+rownames(sbs_mtx_neuro) <- colnames(neurons)
+
+# Filter features
+filt_low_genes2 <-
+    colSums(sbs_mtx_neuro) %>%
+    .[. > quantile(., 0.01)] %>%
+    names()
+sbs_mtx_neuro %<>% .[, filt_low_genes2]
+
+min_filt_vector2 <-
+    sbs_mtx_neuro %>%
+    as_tibble() %>%
+    select(all_of(filt_low_genes2)) %>%
+    summarise(across(.fns = ~ quantile(.x, .005))) %>%
+    as.list %>%
+    map(as.double) %>%
+    simplify %>%
+    .[filt_low_genes2]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx_neuro <-
+    (sbs_mtx_neuro > min_filt_vector2) %>%
+    as_tibble() %>%
+    mutate_all(as.numeric)
+
+
+neurons$gaba_status <-
+  content_sbs_mtx_neuro %>%
+  select(Gad1, Gad2, Slc32a1) %>%
+  mutate(gaba = if_all(.fns = ~ .x > 0)) %>%
+  .$gaba
+
+neurons$gaba_expr <-
+  content_sbs_mtx_neuro %>%
+  select(Gad1, Gad2, Slc32a1) %>%
+  mutate(gaba = if_any(.fns = ~ .x > 0)) %>%
+  .$gaba
+
+neurons$glut_status <-
+  content_sbs_mtx_neuro %>%
+  select(Slc17a6) %>%
+  mutate(glut = Slc17a6 > 0) %>%
+  .$glut
+
+neuro_fin <-
+  subset(neurons,
+    cells = union(
+      WhichCells(neurons,
+        expression = gaba_status == TRUE & glut_status == FALSE),
+      WhichCells(neurons,
+        expression = glut_status == TRUE & gaba_expr == FALSE)))
+
+neuro_fin$status <- neuro_fin$gaba_status %>%
+  if_else(true = "GABAergic",
+    false = "glutamatergic")
+Idents(neuro_fin) <- "status"
+
+sbs_mtx_neuro <-
+    neuro_fin %>%
+    GetAssayData("data", "RNA") %>%
+    as.data.frame() %>%
+    t()
+rownames(sbs_mtx_neuro) <- colnames(neuro_fin)
+
+# Filter features
+filt_low_genes2 <-
+    colSums(sbs_mtx_neuro) %>%
+    .[. > quantile(., 0.01)] %>%
+    names()
+sbs_mtx_neuro %<>% .[, filt_low_genes2]
+
+min_filt_vector2 <-
+    sbs_mtx_neuro %>%
+    as_tibble() %>%
+    select(all_of(filt_low_genes2)) %>%
+    summarise(across(.fns = ~ quantile(.x, .005))) %>%
+    as.list %>%
+    map(as.double) %>%
+    simplify %>%
+    .[filt_low_genes2]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx_neuro <-
+    (sbs_mtx_neuro > min_filt_vector2) %>%
+    as_tibble() %>%
+    mutate_all(as.numeric)
+
+```
+
+
+```{r plot-piecharts-sbs-neuro-chisqr, fig.width=6.5, fig.asp=0.618}
+
+sbs_mtx_neuro_full <- content_sbs_mtx_neuro |> 
+  select(any_of(c(neurotrans, glutr, gabar, "Gal", "Galr1"))) |> 
+  dplyr::bind_cols(neuro_fin@meta.data)
+
+sbs_mtx_neuro_full |> glimpse()
+
+sbs_mtx_neuro_full$Gal_sign <- 
+  sbs_mtx_neuro_full %>%
+  select(Galr1) %>%
+  mutate(Gal_sign = if_any(.fns = ~ .x > 0)) %>%
+  .$Gal_sign
+
+# for reproducibility
+set.seed(reseed)
+# plot
+ggpiestats(
+  # arguments relevant for `ggpiestats()`
+  data = sbs_mtx_neuro_full |> filter(status == "glutamatergic"),
+  x = Gal_sign,
+  perc.k = 1,
+  package = "ggsci",
+  palette = "category10_d3",
+  # arguments relevant for `combine_plots()`
+  title.text = "Molecular specification of Pr5 neuronal lineages by Galr1 signalling and main glutamatergic neurotransmitter expression",
+  caption.text = "Asterisks denote results from proportion tests; \n***: p < 0.001, ns: non-significant",
+  plotgrid.args = list(nrow = 1)
+)
+```
+Molecular specification of Pr5 neuronal lineages by Galr1 signalling and main glutamatergic neurotransmitter expression (no GABAergic cells express Galr1)
 
 
 ```{r pl-feature-slc17a6, fig.align='center', fig.width=7, fig.asp = 0.618}
