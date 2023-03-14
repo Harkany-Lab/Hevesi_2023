@@ -445,7 +445,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -456,8 +456,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -470,9 +470,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>Hevesi_2023/</code> <span
@@ -495,21 +495,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -600,15 +597,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023tree98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7targetblank98a2fc9a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023tree2359a33a857520b3333a5d8918370c08d21ef3fftargetblank2359a33a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7" target="_blank">98a2fc9</a>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/2359a33a857520b3333a5d8918370c08d21ef3ff" target="_blank">2359a33</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023tree98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7targetblank98a2fc9a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023tree2359a33a857520b3333a5d8918370c08d21ef3fftargetblank2359a33a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -618,7 +615,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7" target="_blank">98a2fc9</a>.
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/2359a33a857520b3333a5d8918370c08d21ef3ff" target="_blank">2359a33</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -653,21 +650,6 @@ Ignored files:
     Ignored:    mm10_optimized/
     Ignored:    souporcell/
     Ignored:    souporcell_latest.sif
-
-Unstaged changes:
-    Modified:   analysis/methods.Rmd
-    Modified:   data/references/references.bib
-    Modified:   output/figures/Pr5P7_sex_umap.pdf
-    Modified:   output/figures/Pr5P7_stress_umap.pdf
-    Modified:   output/figures/Pr5P7_top5_umap.pdf
-    Modified:   output/figures/THP7_sex_umap.pdf
-    Modified:   output/figures/THP7_stress_umap.pdf
-    Modified:   output/figures/THP7_top5_umap.pdf
-    Modified:   output/figures/combined_sex_umap.pdf
-    Modified:   output/figures/combined_stress_umap.pdf
-    Modified:   output/figures/combined_top5_umap.pdf
-    Modified:   output/tables/hevesi2023-all-mrk_logreg-sct_combined.csv
-    Modified:   output/tables/hevesi2023-all-mrk_wilcox-sct_combined.csv
 
 </code></pre>
 <p>
@@ -713,6 +695,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/blob/2359a33a857520b3333a5d8918370c08d21ef3ff/analysis/methods.Rmd" target="_blank">2359a33</a>
+</td>
+<td>
+Evgenii O. Tretiakov
+</td>
+<td>
+2023-03-14
+</td>
+<td>
+workflowr::wflow_publish("analysis/methods.Rmd", verbose = TRUE)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/Harkany-Lab/Hevesi_2023/2359a33a857520b3333a5d8918370c08d21ef3ff/docs/methods.html" target="_blank">2359a33</a>
+</td>
+<td>
+Evgenii O. Tretiakov
+</td>
+<td>
+2023-03-14
+</td>
+<td>
+workflowr::wflow_publish("analysis/methods.Rmd", verbose = TRUE)
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -1180,22 +1196,23 @@ other attached packages:
  [4] stringr_1.5.0        dplyr_1.1.0          purrr_1.0.1         
  [7] readr_2.1.3          tidyr_1.3.0          tibble_3.1.8        
 [10] ggplot2_3.4.1        tidyverse_1.3.2.9000 jsonlite_1.8.4      
-[13] knitr_1.42           glue_1.6.2          
+[13] knitr_1.42           glue_1.6.2           workflowr_1.7.0     
 
 loaded via a namespace (and not attached):
  [1] tidyselect_1.2.0 xfun_0.37        bslib_0.4.2      colorspace_2.1-0
  [5] vctrs_0.5.2      generics_0.1.3   htmltools_0.5.4  yaml_2.3.7      
  [9] utf8_1.2.3       rlang_1.0.6      jquerylib_0.1.4  later_1.3.0     
 [13] pillar_1.8.1     withr_2.5.0      bit64_4.0.5      lifecycle_1.0.3 
-[17] munsell_0.5.0    gtable_0.3.1     workflowr_1.7.0  evaluate_0.20   
-[21] tzdb_0.3.0       fastmap_1.1.0    httpuv_1.6.9     parallel_4.2.2  
-[25] fansi_1.0.4      Rcpp_1.0.10      promises_1.2.0.1 scales_1.2.1    
-[29] cachem_1.0.6     vroom_1.6.0      bit_4.0.5        fs_1.6.1        
-[33] hms_1.1.2        digest_0.6.31    stringi_1.7.12   rprojroot_2.0.3 
-[37] grid_4.2.2       here_1.0.1       cli_3.6.0        tools_4.2.2     
-[41] magrittr_2.0.3   sass_0.4.5       crayon_1.5.2     whisker_0.4.1   
-[45] pkgconfig_2.0.3  ellipsis_0.3.2   rmarkdown_2.20   rstudioapi_0.14 
-[49] R6_2.5.1         git2r_0.30.1     compiler_4.2.2  </code></pre>
+[17] munsell_0.5.0    gtable_0.3.1     evaluate_0.20    tzdb_0.3.0      
+[21] callr_3.7.3      fastmap_1.1.0    httpuv_1.6.9     ps_1.7.2        
+[25] parallel_4.2.2   fansi_1.0.4      Rcpp_1.0.10      promises_1.2.0.1
+[29] scales_1.2.1     cachem_1.0.6     vroom_1.6.0      bit_4.0.5       
+[33] fs_1.6.1         hms_1.1.2        digest_0.6.31    stringi_1.7.12  
+[37] processx_3.8.0   getPass_0.2-2    rprojroot_2.0.3  grid_4.2.2      
+[41] here_1.0.1       cli_3.6.0        tools_4.2.2      magrittr_2.0.3  
+[45] sass_0.4.5       crayon_1.5.2     whisker_0.4.1    pkgconfig_2.0.3 
+[49] ellipsis_0.3.2   rmarkdown_2.20   httr_1.4.4       rstudioapi_0.14 
+[53] R6_2.5.1         git2r_0.30.1     compiler_4.2.2  </code></pre>
 </div>
 </div>
 
