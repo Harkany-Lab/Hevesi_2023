@@ -10,11 +10,12 @@ output:
     highlight: textmate
     code_folding: hide
     df_print: paged
+editor_options: 
+  markdown: 
+    wrap: 72
 bibliography:
     - "`r here::here('data/references/references.bib')`"
     - "`r here::here('output/methods/packages.bib')`"
-bibliography: references.bib
-bibliography: references.bib
 ---
 
 ```{r knitr, include = FALSE}
@@ -142,74 +143,81 @@ expression matrix that was used for further analysis.
 
 The droplet selection method of Cell Ranger identified 923 nuclei in
 ventrobasal thalamus and in principal sensory trigeminal nucleus - 731
-nuclei based on EmptyDrops method incorporated into cellranger count
-pipeline.
+nuclei based on EmptyDrops method
+[@lunEmptyDropsDistinguishingCells2019] incorporated into cellranger
+count pipeline.
 
 ## Ambient RNA removal
 
-Using those values we applied neural network-based approach called
-cellbender (`r versions$cellbender`)
-[@flemingUnsupervisedRemovalSystematic2022]
+Using those values as expected number of cells we applied neural
+network-based approach called CellBender (`r versions$cellbender`)
+[@flemingUnsupervisedRemovalSystematic2022]. We set false positive rate
+threshold at the level of 0.01 and set neural network to learn over 150
+epoch with total 5000 droplets included based on knee plots (please see
+online supplementary Cell Ranger reports).
 
 ## Doublets detection
 
 We quantified log probability to be a doublet for every cell based on
-apriori knowledge of genotypes of input samples and called variant
-occurring frequencies that allowed to cluster nuclei to source organism
-or classify as a doublet [@heatonSouporcellRobustClustering2020].
+apriori knowledge of genotypes from each input samples and called
+variant occurrence frequencies that allowed to cluster nuclei to source
+organism or classify as a doublet
+[@heatonSouporcellRobustClustering2020] (see `r versions$souporcell`) .
 
-Gene annotation information was added from BioMart [@Smedley2015-an]
-using the biomaRt package (v`r versions$biomaRt`) [@Durinck2005-zb] and
-cells were assigned cell cycle scores using the cyclone
-[@Scialdone2015-rp] function in the scran package (v`r versions$scran`)
-[@Lun2016-mq].
+## Further filtering
+
+Gene annotation information was added using the gprofiler2 package
+(v`r versions`\$gprofiler2) [\@reimandProfileraWebServer2016]; thus we
+filter cells based on high content of mitochondrial, ribosomal or
+hemoglobin proteins genes, specifically 1%, 1% and 0.5%; additionally
+pseudogenes and poorly annotated genes were also deleted from count
+matrix. Moreover, cells of low complexity were filtered out as
+($\log_{10}Genes/\log_{10}UMI < 0.8$). Therefore, cells were assigned
+cell cycle scores using the CellCycleScoring function in the Seurat
+package (v`r versions$Seurat`).
 
 # Clustering
 
 ## Gene selection
 
-Two methods were used to select genes to use for clustering. The default
-selection method in the Seurat package (v`r versions$Seurat`)
-[@Satija2015-or; @stuartIntegrativeSinglecellAnalysis2019] uses a modern
-variance stabilising transformation statistical technic that utilises
-person residuals [@hafemeister2019].
+We used the selection method in the Seurat package
+(v`r versions$Seurat`) [@Satija2015-or;
+@stuartIntegrativeSinglecellAnalysis2019], which uses a modern variance
+stabilising transformation statistical technic that utilises scaling to
+person residuals [@hafemeister2019]. That way we selected 3000 highly
+variable genes per dataset and regressed out complexity and cell-cycle
+variability prior to final scaling of filtered matrixes.
 
 ## Graph-based and multi-level reconcile tree clustering
 
-Seurat was used to perform Leiden algorithm graph-based clustering. PCA
-was performed using the selected genes and the first
-`r params$clust$n_pcs` principal components were used to construct a
-shared nearest neighbour graph using the overlap between the
-`r params$clust$knn` nearest neighbours of each cell. Louvain modularity
-optimisation [@Blondel2008-ym] was used to partition this graph with a
-resolution parameter between `r min(params$clust$resolutions)` and
-`r max(params$clust$resolutions)`. Clustering tree visualisations
-[@Zappia2018-lz] were produced using the clustree package
-(v`r versions$clustree`) showing the expression of previously identified
-marker genes. By inspecting these trees a resolution of
-`r params$clust$res` which chosen which produced
-`r params$clust$n_clusts` clusters. To compare these cluster to those
-that had been previously published the Jaccard index was calculated
-between pairs of clusters from each analysis and visualised as a
-heatmap.
+We performed Leiden algorithm graph-based clustering. PCA was performed
+using the selected genes and the jacknife tested
+[@chungStatisticalSignificanceVariables2015] principal components (we
+tested significance of feature for randomly picked 1% of data over 1000
+iterations; see PCScore function in functions.R script of code
+directory) were used to construct a shared nearest neighbour graph using
+the overlap between the `15` nearest neighbours of each cell. Leiden
+modularity optimisation [@traag2019] was used to partition this graph
+with an array of resolution parameters where 30 modularity events were
+sampled between `0.2` and `2.5`. Clustering tree visualisations
+[@zappiaClusteringTreesVisualization2018] were produced using the
+clustree package (v`r versions$clustree`) showing the resolution of
+previously identified clusters. By inspecting these resolutions
+reconcile tree produced by mrtree package (v`r versions$mrtree`
+[@pengCellTypeHierarchy2021] and calculating adjusted multi-resolution
+Rand index chosen as maximum value if there is no higher modularity
+within 0.05 AMRI difference (see SelectResolution in function.R file of
+code directory).
 
 # Marker genes
 
 Marker genes for each cluster were identified using logreg test
 [@ntranosDiscriminativeLearningApproach2019] implemented in Seurat
 framework (v`r versions$seurat`)
-[@stuartIntegrativeSinglecellAnalysis2019]. Additional filtering was
-performed to remove genes with a $\log_{10}$ maximum average counts in
-any cluster less than `r params$markers$maxmean_thresh`. The edgeR
-negative binomial model was then fitted to the dataset using a design
-matrix that included the detection rate (scaled proportion of genes
-expressed in each cell). The quasi-likelihood F-test was used to test
-cells in one cluster against all other cells. Genes were considered
-significant markers for a cluster if they had an FDR less than
-`r params$markers$fdr_thresh` and a log foldchange greater than
-`r params$markers$logFC_thresh`. Identities were assigned to each
-cluster by comparing the detected genes to previously published lists of
-cell type markers.
+[@stuartIntegrativeSinglecellAnalysis2019]. Genes were considered
+significant markers for a cluster if they had an FDR less than `0.001`.
+Identities were assigned to each cluster by comparing the detected genes
+to previously published markers and our own validation experiments.
 
 # Other packages
 
@@ -217,23 +225,21 @@ Visualisations and figures were primarily created using the ggplot2
 (v`r versions$ggplot2`) [@Wickham2010-zq] and cowplot
 (v`r versions$cowplot`) [@R-cowplot] packages using the viridis colour
 palette (v`r versions$viridis`) for continuous data. UpSet plots
-[@Lex2014-hy] were produced using the UpSetR package
-(v`r versions$UpSetR`) [@R-UpSetR] with help from the gridExtra package
-(v`r versions$gridExtra`) [@R-gridExtra] and SinaPlots
-[@Sidiropoulos2018-ll] using the ggforce package (v`r versions$ggforce`)
-[@R-ggforce]. Data manipulation was performed using other packages in
-the tidyverse (v`r versions$tidyverse`) [@R-tidyverse] particularly
-dplyr (v`r versions$dplyr`) [@R-dplyr], tidyr (v`r versions$dplyr`)
-[@R-tidyr] and purrr (v`r versions$purrr`) [@R-purrr]. Loom files were
-exported from R using the LoomExperiment package
-(v`r versions$LoomExperiment`) [@R-LoomExperiment]. The analysis project
-was managed using the workflowr (v`r versions$workflowr`) [@R-workflowr]
-package which was also used to produce the publicly available website
-displaying the analysis code, results and output. Reproducible reports
-were produced using knitr (v`r versions$knitr`) [@Xie2014-ha;
-@Xie2016-ct; @R-knitr] and R Markdown (v`r versions$rmarkdown`)
-[@Xie2018-tw; @R-rmarkdown] and converted to HTML using Pandoc
-(v`r versions$pandoc`).
+[@conwayUpSetRPackageVisualization2017] were produced using the UpSetR
+package (v`r versions$UpSetR`) [@R-UpSetR] with help from the gridExtra
+package (v`r versions$gridExtra`) [@R-gridExtra]. Data manipulation was
+performed using other packages in the tidyverse
+(v`r versions$tidyverse`) [@R-tidyverse] particularly dplyr
+(v`r versions$dplyr`) [@R-dplyr], tidyr (v`r versions$dplyr`) [@R-tidyr]
+and purrr (v`r versions$purrr`) [@R-purrr]. The analysis project was
+managed using the Snakemake system (v `r versions$snakemake`)
+[@molderSustainableDataAnalysis2021] and the workflowr
+(v`r versions$workflowr`) [@R-workflowr] package which was also used to
+produce the publicly available website displaying the analysis code,
+results and output. Reproducible reports were produced using knitr
+(v`r versions$knitr`) [@Xie2014-ha; @Xie2016-ct; @R-knitr] and R
+Markdown (v`r versions$rmarkdown`) [@Xie2018-tw; @R-rmarkdown] and
+converted to HTML using Pandoc (v`r versions$pandoc`).
 
 # References
 
