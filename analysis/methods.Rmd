@@ -1,1 +1,258 @@
+---
+title: "Methods"
+author: "Evgenii O. Tretiakov"
+date: "`r Sys.Date()`"
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: yes
+    theme: cosmo
+    highlight: textmate
+    code_folding: hide
+    df_print: paged
+bibliography:
+    - "`r here::here('data/references/references.bib')`"
+    - "`r here::here('output/methods/packages.bib')`"
+bibliography: references.bib
+bibliography: references.bib
+---
 
+```{r knitr, include = FALSE}
+DOCNAME = "methods"
+NOW <- Sys.time()
+
+# Time chunks during knitting
+knitr::knit_hooks$set(timeit = function(before) {
+    if (before) {
+        print(paste("Start:", Sys.time()))
+        NOW <<- Sys.time()
+    } else {
+        print(paste("Stop:", Sys.time()))
+        print(Sys.time() - NOW)
+    }
+})
+
+knitr::opts_chunk$set(
+    autodep        = TRUE,
+    cache          = FALSE,
+    cache.path     = paste0("cache/", DOCNAME, "/"),
+    cache.comments = FALSE,
+    echo           = TRUE,
+    error          = FALSE,
+    fig.align      = "center",
+    fig.width      = 10,
+    fig.height     = 8,
+    message        = FALSE,
+    warning        = FALSE,
+    timeit         = TRUE
+)
+```
+
+```{r libaries, cache = FALSE}
+# Presentation
+library("glue")
+library("knitr")
+
+# JSON
+library("jsonlite")
+
+# Tidyverse
+library("tidyverse")
+```
+
+```{r source, cache = FALSE}
+
+```
+
+```{r pkg-bib}
+dir.create(here::here("output", DOCNAME), showWarnings = FALSE)
+
+write_bib(c("base", "Seurat", "SeuratWrappers", "SeuratDisk", "sctransform",
+            "glmGamPoi", "patchwork", "scCustomize", "Nebulosa", "clustree",
+            "mrtree", "gprofiler2", "cowplot", "UpSetR", "ggstatsplot",
+            "gridExtra", "tidyverse", "dplyr", "tidyr", "magrittr", "stringr",
+            "skimr", "future", "purrr", "here", "workflowr", "zeallot", "knitr",
+            "kableExtra", "rmarkdown", "reticulate"),
+          file = here::here("output", DOCNAME, "packages.bib"))
+```
+
+```{r load}
+versions <- list(
+    biomaRt        = packageVersion("biomaRt"),
+    cellbender     = "docker://etretiakov/cellbender:v0.0.1",
+    cellranger     = "7.1.0",
+    cellranger_ref = "mm10_optimized_v.1.0",
+    clustree       = packageVersion("clustree"),
+    cowplot        = packageVersion("cowplot"),
+    dplyr          = packageVersion("dplyr"),
+    future         = packageVersion("future"),
+    ggplot2        = packageVersion("ggplot2"),
+    ggstatsplot    = packageVersion("ggstatsplot"),
+    glmGamPoi      = packageVersion("glmGamPoi"),
+    gprofiler2     = packageVersion("gprofiler2"),
+    gridExtra      = packageVersion("gridExtra"),
+    here           = packageVersion("here"),
+    kableExtra     = packageVersion("kableExtra"),
+    knitr          = packageVersion("knitr"),
+    magrittr       = packageVersion("magrittr"),
+    mrtree         = packageVersion("mrtree"),
+    Nebulosa       = packageVersion("Nebulosa"),
+    pandoc         = rmarkdown::pandoc_version(),
+    patchwork      = packageVersion("patchwork"),
+    purrr          = packageVersion("purrr"),
+    python         = "3.8.8",
+    R              = str_extract(R.version.string, "[0-9\\.]+"),
+    reticulate     = packageVersion("reticulate"),
+    rmarkdown      = packageVersion("rmarkdown"),
+    scCustomize    = packageVersion("scCustomize"),
+    sctransform    = packageVersion("sctransform"),
+    Seurat         = packageVersion("Seurat"),
+    skimr          = packageVersion("skimr"),
+    stringr        = packageVersion("stringr"),
+    Snakemake      = "7.21.0",
+    souporcell     = "shub://wheaton5/souporcell",
+    tidyr          = packageVersion("tidyr"),
+    tidyverse      = packageVersion("tidyverse"),
+    UpSetR         = packageVersion("UpSetR"),
+    viridis        = packageVersion("viridis"),
+    workflowr      = packageVersion("workflowr"),
+    zeallot        = packageVersion("zeallot")
+)
+```
+
+# Pre-processing
+
+The Cell Ranger pipeline (v`r versions$cellranger`)
+[@zhengMassivelyParallelDigital2017] was used to perform sample
+demultiplexing, barcode processing and single-nuclei gene counting.
+Briefly, samples were demultiplexed to produce a pair of FASTQ files for
+each sample. Reads containing sequence information were aligned using
+the optimised mouse genome reference (v`r versions$cellranger_ref`)
+provided by Pool's lab based on the default Cell Ranger mm10 genome
+version 2020-A that was cleared from gene overlaps, poorly annotated
+exons and 3'-UTRs and intergenic fragments
+[@poolEnhancedRecoverySinglecell2022]. PCR duplicates were removed by
+selecting unique combinations of cell barcodes, unique molecular
+identifiers (UMIs) and gene ids with the final results being a gene
+expression matrix that was used for further analysis.
+
+# Quality control
+
+## Droplet selection
+
+The droplet selection method of Cell Ranger identified 923 nuclei in
+ventrobasal thalamus and in principal sensory trigeminal nucleus - 731
+nuclei based on EmptyDrops method incorporated into cellranger count
+pipeline.
+
+## Ambient RNA removal
+
+Using those values we applied neural network-based approach called
+cellbender (`r versions$cellbender`)
+[@flemingUnsupervisedRemovalSystematic2022]
+
+## Doublets detection
+
+We quantified log probability to be a doublet for every cell based on
+apriori knowledge of genotypes of input samples and called variant
+occurring frequencies that allowed to cluster nuclei to source organism
+or classify as a doublet [@heatonSouporcellRobustClustering2020].
+
+Gene annotation information was added from BioMart [@Smedley2015-an]
+using the biomaRt package (v`r versions$biomaRt`) [@Durinck2005-zb] and
+cells were assigned cell cycle scores using the cyclone
+[@Scialdone2015-rp] function in the scran package (v`r versions$scran`)
+[@Lun2016-mq].
+
+# Clustering
+
+## Gene selection
+
+Two methods were used to select genes to use for clustering. The default
+selection method in the Seurat package (v`r versions$Seurat`)
+[@Satija2015-or; @stuartIntegrativeSinglecellAnalysis2019] uses a modern
+variance stabilising transformation statistical technic that utilises
+person residuals [@hafemeister2019].
+
+## Graph-based and multi-level reconcile tree clustering
+
+Seurat was used to perform Leiden algorithm graph-based clustering. PCA
+was performed using the selected genes and the first
+`r params$clust$n_pcs` principal components were used to construct a
+shared nearest neighbour graph using the overlap between the
+`r params$clust$knn` nearest neighbours of each cell. Louvain modularity
+optimisation [@Blondel2008-ym] was used to partition this graph with a
+resolution parameter between `r min(params$clust$resolutions)` and
+`r max(params$clust$resolutions)`. Clustering tree visualisations
+[@Zappia2018-lz] were produced using the clustree package
+(v`r versions$clustree`) showing the expression of previously identified
+marker genes. By inspecting these trees a resolution of
+`r params$clust$res` which chosen which produced
+`r params$clust$n_clusts` clusters. To compare these cluster to those
+that had been previously published the Jaccard index was calculated
+between pairs of clusters from each analysis and visualised as a
+heatmap.
+
+# Marker genes
+
+Marker genes for each cluster were identified using logreg test
+[@ntranosDiscriminativeLearningApproach2019] implemented in Seurat
+framework (v`r versions$seurat`)
+[@stuartIntegrativeSinglecellAnalysis2019]. Additional filtering was
+performed to remove genes with a $\log_{10}$ maximum average counts in
+any cluster less than `r params$markers$maxmean_thresh`. The edgeR
+negative binomial model was then fitted to the dataset using a design
+matrix that included the detection rate (scaled proportion of genes
+expressed in each cell). The quasi-likelihood F-test was used to test
+cells in one cluster against all other cells. Genes were considered
+significant markers for a cluster if they had an FDR less than
+`r params$markers$fdr_thresh` and a log foldchange greater than
+`r params$markers$logFC_thresh`. Identities were assigned to each
+cluster by comparing the detected genes to previously published lists of
+cell type markers.
+
+# Other packages
+
+Visualisations and figures were primarily created using the ggplot2
+(v`r versions$ggplot2`) [@Wickham2010-zq] and cowplot
+(v`r versions$cowplot`) [@R-cowplot] packages using the viridis colour
+palette (v`r versions$viridis`) for continuous data. UpSet plots
+[@Lex2014-hy] were produced using the UpSetR package
+(v`r versions$UpSetR`) [@R-UpSetR] with help from the gridExtra package
+(v`r versions$gridExtra`) [@R-gridExtra] and SinaPlots
+[@Sidiropoulos2018-ll] using the ggforce package (v`r versions$ggforce`)
+[@R-ggforce]. Data manipulation was performed using other packages in
+the tidyverse (v`r versions$tidyverse`) [@R-tidyverse] particularly
+dplyr (v`r versions$dplyr`) [@R-dplyr], tidyr (v`r versions$dplyr`)
+[@R-tidyr] and purrr (v`r versions$purrr`) [@R-purrr]. Loom files were
+exported from R using the LoomExperiment package
+(v`r versions$LoomExperiment`) [@R-LoomExperiment]. The analysis project
+was managed using the workflowr (v`r versions$workflowr`) [@R-workflowr]
+package which was also used to produce the publicly available website
+displaying the analysis code, results and output. Reproducible reports
+were produced using knitr (v`r versions$knitr`) [@Xie2014-ha;
+@Xie2016-ct; @R-knitr] and R Markdown (v`r versions$rmarkdown`)
+[@Xie2018-tw; @R-rmarkdown] and converted to HTML using Pandoc
+(v`r versions$pandoc`).
+
+# References
+
+::: {#refs}
+:::
+
+# Summary
+
+## Output files\`
+
+```{r save}
+versions <- purrr::map(versions, as.character)
+versions <- jsonlite::toJSON(versions, pretty = TRUE)
+readr::write_lines(versions,
+                   here::here("output", DOCNAME, "package-versions.json"))
+```
+
+## Session information
+
+```{r session-info, cache = FALSE}
+devtools::session_info()
+```

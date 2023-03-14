@@ -19,4 +19,5 @@ souporcell/*
 fastq/*
 *.sif
 *.h5Seurat
+*.h5seurat
 *.h5ad

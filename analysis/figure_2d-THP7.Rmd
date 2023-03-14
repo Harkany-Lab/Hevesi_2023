@@ -334,7 +334,7 @@ DotPlot(object = neuro_fin_neurotrans$GABAergic,
 ```
 
 Expression of glutamate receptors in glutamatergic Gal positive cells
-```{r plot-dotplot-glur-glu-neurons, fig.width=6, fig.asp=.4}
+```{r plot-dotplot-glur-glu-neurons, fig.width=7, fig.asp=.5}
 DotPlot(object = neuro_fin_neurotrans$glutamatergic,
         features = glutr,
         group.by = "k_tree",
