@@ -3,6 +3,7 @@ title: "Methods"
 author: "Evgenii O. Tretiakov"
 date: "`r Sys.Date()`"
 output:
+  word_document:
   workflowr::wflow_html:
     toc: true
     toc_float: yes
@@ -149,52 +150,52 @@ count pipeline.
 
 ## Ambient RNA removal
 
-Using those values as expected number of cells we applied neural
+Using those values as the expected number of cells, we applied a neural
 network-based approach called CellBender (`r versions$cellbender`)
-[@flemingUnsupervisedRemovalSystematic2022]. We set false positive rate
-threshold at the level of 0.01 and set neural network to learn over 150
-epoch with total 5000 droplets included based on knee plots (please see
-online supplementary Cell Ranger reports).
+[@fleming2022]. We set a false positive rate threshold at the level of
+0.01 and set the neural network to learn over 150 epochs with a total of
+5000 droplets included based on knee plots (please see online
+supplementary Cell Ranger reports).
 
 ## Doublets detection
 
 We quantified log probability to be a doublet for every cell based on
-apriori knowledge of genotypes from each input samples and called
-variant occurrence frequencies that allowed to cluster nuclei to source
-organism or classify as a doublet
-[@heatonSouporcellRobustClustering2020] (see `r versions$souporcell`) .
+apriori knowledge of genotypes from each input sample and called variant
+occurrence frequencies that allowed to cluster nuclei to source organism
+or classify as a doublet [@heatonSouporcellRobustClustering2020] (see
+`r versions$souporcell`).
 
 ## Further filtering
 
 Gene annotation information was added using the gprofiler2 package
-(v`r versions`\$gprofiler2) [\@reimandProfileraWebServer2016]; thus we
+(v`r versions$gprofiler2`) [@reimandProfileraWebServer2016]; thus we
 filter cells based on high content of mitochondrial, ribosomal or
-hemoglobin proteins genes, specifically 1%, 1% and 0.5%; additionally
-pseudogenes and poorly annotated genes were also deleted from count
-matrix. Moreover, cells of low complexity were filtered out as
-($\log_{10}Genes/\log_{10}UMI < 0.8$). Therefore, cells were assigned
-cell cycle scores using the CellCycleScoring function in the Seurat
-package (v`r versions$Seurat`).
+hemoglobin proteins genes, specifically thresholds set as 1%, 1% and
+0.5%; additionally pseudogenes and poorly annotated genes were also
+deleted from count matrix. Moreover, cells of low complexity were
+filtered out as ($\log_{10}Genes/\log_{10}UMI < 0.8$). Therefore, cells
+were assigned cell cycle scores using the `CellCycleScoring` function in
+the Seurat package (v`r versions$Seurat`).
 
 # Clustering
 
 ## Gene selection
 
 We used the selection method in the Seurat package
-(v`r versions$Seurat`) [@Satija2015-or;
+(v`r versions$Seurat`) [@satijaSpatialReconstructionSinglecell2015;
 @stuartIntegrativeSinglecellAnalysis2019], which uses a modern variance
 stabilising transformation statistical technic that utilises scaling to
-person residuals [@hafemeister2019]. That way we selected 3000 highly
+person residuals [@hafemeister2019]. That way, we selected 3000 highly
 variable genes per dataset and regressed out complexity and cell-cycle
-variability prior to final scaling of filtered matrixes.
+variability prior to the final scaling of filtered matrixes.
 
 ## Graph-based and multi-level reconcile tree clustering
 
 We performed Leiden algorithm graph-based clustering. PCA was performed
-using the selected genes and the jacknife tested
+using the selected genes and the jackknife tested
 [@chungStatisticalSignificanceVariables2015] principal components (we
-tested significance of feature for randomly picked 1% of data over 1000
-iterations; see PCScore function in functions.R script of code
+tested the significance of feature for randomly picked 1% of data over
+1000 iterations; see `PCScore` function in `functions.R` script of code
 directory) were used to construct a shared nearest neighbour graph using
 the overlap between the `15` nearest neighbours of each cell. Leiden
 modularity optimisation [@traag2019] was used to partition this graph
@@ -203,17 +204,16 @@ sampled between `0.2` and `2.5`. Clustering tree visualisations
 [@zappiaClusteringTreesVisualization2018] were produced using the
 clustree package (v`r versions$clustree`) showing the resolution of
 previously identified clusters. By inspecting these resolutions
-reconcile tree produced by mrtree package (v`r versions$mrtree`
+reconcile tree produced by mrtree package (v`r versions$mrtree`)
 [@pengCellTypeHierarchy2021] and calculating adjusted multi-resolution
 Rand index chosen as maximum value if there is no higher modularity
-within 0.05 AMRI difference (see SelectResolution in function.R file of
-code directory).
+within `0.05` AMRI difference (see `SelectResolution` in `function.R`
+file of code directory).
 
 # Marker genes
 
 Marker genes for each cluster were identified using logreg test
-[@ntranosDiscriminativeLearningApproach2019] implemented in Seurat
-framework (v`r versions$seurat`)
+[@ntranos2019] implemented in Seurat framework (v`r versions$seurat`)
 [@stuartIntegrativeSinglecellAnalysis2019]. Genes were considered
 significant markers for a cluster if they had an FDR less than `0.001`.
 Identities were assigned to each cluster by comparing the detected genes
@@ -222,9 +222,9 @@ to previously published markers and our own validation experiments.
 # Other packages
 
 Visualisations and figures were primarily created using the ggplot2
-(v`r versions$ggplot2`) [@Wickham2010-zq] and cowplot
-(v`r versions$cowplot`) [@R-cowplot] packages using the viridis colour
-palette (v`r versions$viridis`) for continuous data. UpSet plots
+(v`r versions$ggplot2`), cowplot (v`r versions$cowplot`) [@R-cowplot]
+and patchwork (v`r versions$patchwork`) packages using the viridis
+colour palette (v`r versions$viridis`) for continuous data. UpSet plots
 [@conwayUpSetRPackageVisualization2017] were produced using the UpSetR
 package (v`r versions$UpSetR`) [@R-UpSetR] with help from the gridExtra
 package (v`r versions$gridExtra`) [@R-gridExtra]. Data manipulation was
@@ -237,18 +237,13 @@ managed using the Snakemake system (v `r versions$snakemake`)
 (v`r versions$workflowr`) [@R-workflowr] package which was also used to
 produce the publicly available website displaying the analysis code,
 results and output. Reproducible reports were produced using knitr
-(v`r versions$knitr`) [@Xie2014-ha; @Xie2016-ct; @R-knitr] and R
-Markdown (v`r versions$rmarkdown`) [@Xie2018-tw; @R-rmarkdown] and
-converted to HTML using Pandoc (v`r versions$pandoc`).
-
-# References
-
-::: {#refs}
-:::
+(v`r versions$knitr`) [@R-knitr] and R Markdown
+(v`r versions$rmarkdown`) [@R-rmarkdown] and converted to HTML using
+Pandoc (v`r versions$pandoc`).
 
 # Summary
 
-## Output files\`
+## Output files
 
 ```{r save}
 versions <- purrr::map(versions, as.character)
@@ -257,8 +252,5 @@ readr::write_lines(versions,
                    here::here("output", DOCNAME, "package-versions.json"))
 ```
 
-## Session information
+# References
 
-```{r session-info, cache = FALSE}
-devtools::session_info()
-```

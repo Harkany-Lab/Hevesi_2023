@@ -445,7 +445,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-ok text-success"
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -456,8 +456,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-</a>
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -470,9 +470,9 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 0
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>Hevesi_2023/</code> <span
@@ -495,18 +495,21 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
@@ -597,15 +600,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023treea7f002debf66b9e92a9d8bdeccfc429951793a92targetblanka7f002da">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023tree98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7targetblank98a2fc9a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/a7f002debf66b9e92a9d8bdeccfc429951793a92" target="_blank">a7f002d</a>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7" target="_blank">98a2fc9</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023treea7f002debf66b9e92a9d8bdeccfc429951793a92targetblanka7f002da"
+id="strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023tree98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7targetblank98a2fc9a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -615,7 +618,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/a7f002debf66b9e92a9d8bdeccfc429951793a92" target="_blank">a7f002d</a>.
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7" target="_blank">98a2fc9</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -652,6 +655,8 @@ Ignored files:
     Ignored:    souporcell_latest.sif
 
 Unstaged changes:
+    Modified:   analysis/methods.Rmd
+    Modified:   data/references/references.bib
     Modified:   output/figures/Pr5P7_sex_umap.pdf
     Modified:   output/figures/Pr5P7_stress_umap.pdf
     Modified:   output/figures/Pr5P7_top5_umap.pdf
@@ -708,6 +713,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/Harkany-Lab/Hevesi_2023/98a2fc94c8f40ce0caae80e1573fcfddbe5d1de7/docs/methods.html" target="_blank">98a2fc9</a>
+</td>
+<td>
+Evgenii O. Tretiakov
+</td>
+<td>
+2023-03-14
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -852,40 +874,34 @@ nuclei based on EmptyDrops method <span class="citation">(Lun et al.
 </div>
 <div id="ambient-rna-removal" class="section level2">
 <h2>Ambient RNA removal</h2>
-<p>Using those values as expected number of cells we applied neural
-network-based approach called CellBender
-(docker://etretiakov/cellbender:v0.0.1) <span
-class="citation">(<strong>flemingUnsupervisedRemovalSystematic2022?</strong>)</span>.
-We set false positive rate threshold at the level of 0.01 and set neural
-network to learn over 150 epoch with total 5000 droplets included based
-on knee plots (please see online supplementary Cell Ranger reports).</p>
+<p>Using those values as the expected number of cells, we applied a
+neural network-based approach called CellBender
+(docker://etretiakov/cellbender:v0.0.1) <span class="citation">(Fleming
+et al. 2022)</span>. We set a false positive rate threshold at the level
+of 0.01 and set the neural network to learn over 150 epochs with a total
+of 5000 droplets included based on knee plots (please see online
+supplementary Cell Ranger reports).</p>
 </div>
 <div id="doublets-detection" class="section level2">
 <h2>Doublets detection</h2>
 <p>We quantified log probability to be a doublet for every cell based on
-apriori knowledge of genotypes from each input samples and called
-variant occurrence frequencies that allowed to cluster nuclei to source
-organism or classify as a doublet <span
-class="citation">(<strong>heatonSouporcellRobustClustering2020?</strong>)</span>
-(see shub://wheaton5/souporcell) .</p>
+apriori knowledge of genotypes from each input sample and called variant
+occurrence frequencies that allowed to cluster nuclei to source organism
+or classify as a doublet <span class="citation">(Heaton et al.
+2020)</span> (see shub://wheaton5/souporcell).</p>
 </div>
 <div id="further-filtering" class="section level2">
 <h2>Further filtering</h2>
 <p>Gene annotation information was added using the gprofiler2 package
-(v2.54.0, docker://etretiakov/cellbender:v0.0.1, 7.1.0,
-mm10_optimized_v.1.0, 0.5.0, 1.1.1, 1.1.0, 1.31.0, 3.4.1, 0.10.0,
-1.10.2, 0.2.1, 2.3, 1.0.1, 1.3.4, 1.42, 2.0.3, 0.0.0.9000, 1.8.0,
-2.19.2, 1.1.2.9000, 1.0.1, 3.8.8, 4.2.2, 1.28, 2.20, 1.1.1, 0.3.5,
-4.3.0, 2.1.5, 1.5.0, 7.21.0, shub://wheaton5/souporcell, 1.3.0,
-1.3.2.9000, 1.4.0, 0.6.2, 1.7.0, 0.1.0$gprofiler2)
-[@reimandProfileraWebServer2016]; thus we filter cells based on high
-content of mitochondrial, ribosomal or hemoglobin proteins genes,
-specifically 1%, 1% and 0.5%; additionally pseudogenes and poorly
-annotated genes were also deleted from count matrix. Moreover, cells of
-low complexity were filtered out as (<span
-class="math inline">\(\log_{10}Genes/\log_{10}UMI &lt; 0.8\)</span>).
-Therefore, cells were assigned cell cycle scores using the
-CellCycleScoring function in the Seurat package (v4.3.0).</p>
+(v0.2.1) <span class="citation">(Reimand et al. 2016)</span>; thus we
+filter cells based on high content of mitochondrial, ribosomal or
+hemoglobin proteins genes, specifically thresholds set as 1%, 1% and
+0.5%; additionally pseudogenes and poorly annotated genes were also
+deleted from count matrix. Moreover, cells of low complexity were
+filtered out as (<span class="math inline">\(\log_{10}Genes/\log_{10}UMI
+&lt; 0.8\)</span>). Therefore, cells were assigned cell cycle scores
+using the <code>CellCycleScoring</code> function in the Seurat package
+(v4.3.0).</p>
 </div>
 </div>
 <div id="clustering" class="section level1">
@@ -893,56 +909,55 @@ CellCycleScoring function in the Seurat package (v4.3.0).</p>
 <div id="gene-selection" class="section level2">
 <h2>Gene selection</h2>
 <p>We used the selection method in the Seurat package (v4.3.0) <span
-class="citation">(<strong>Satija2015-or?</strong>; Stuart and Satija
-2019)</span>, which uses a modern variance stabilising transformation
-statistical technic that utilises scaling to person residuals <span
-class="citation">(Hafemeister and Satija 2019)</span>. That way we
+class="citation">(Satija et al. 2015; Stuart and Satija 2019)</span>,
+which uses a modern variance stabilising transformation statistical
+technic that utilises scaling to person residuals <span
+class="citation">(Hafemeister and Satija 2019)</span>. That way, we
 selected 3000 highly variable genes per dataset and regressed out
-complexity and cell-cycle variability prior to final scaling of filtered
-matrixes.</p>
+complexity and cell-cycle variability prior to the final scaling of
+filtered matrixes.</p>
 </div>
 <div id="graph-based-and-multi-level-reconcile-tree-clustering"
 class="section level2">
 <h2>Graph-based and multi-level reconcile tree clustering</h2>
 <p>We performed Leiden algorithm graph-based clustering. PCA was
-performed using the selected genes and the jacknife tested <span
-class="citation">(<strong>chungStatisticalSignificanceVariables2015?</strong>)</span>
-principal components (we tested significance of feature for randomly
-picked 1% of data over 1000 iterations; see PCScore function in
-functions.R script of code directory) were used to construct a shared
-nearest neighbour graph using the overlap between the <code>15</code>
-nearest neighbours of each cell. Leiden modularity optimisation <span
-class="citation">(Traag, Waltman, and Eck 2019)</span> was used to
-partition this graph with an array of resolution parameters where 30
-modularity events were sampled between <code>0.2</code> and
-<code>2.5</code>. Clustering tree visualisations <span
-class="citation">(Zappia and Oshlack 2018)</span> were produced using
-the clustree package (v0.5.0) showing the resolution of previously
+performed using the selected genes and the jackknife tested <span
+class="citation">(Chung and Storey 2015)</span> principal components (we
+tested the significance of feature for randomly picked 1% of data over
+1000 iterations; see <code>PCScore</code> function in
+<code>functions.R</code> script of code directory) were used to
+construct a shared nearest neighbour graph using the overlap between the
+<code>15</code> nearest neighbours of each cell. Leiden modularity
+optimisation <span class="citation">(Traag, Waltman, and Eck
+2019)</span> was used to partition this graph with an array of
+resolution parameters where 30 modularity events were sampled between
+<code>0.2</code> and <code>2.5</code>. Clustering tree visualisations
+<span class="citation">(Zappia and Oshlack 2018)</span> were produced
+using the clustree package (v0.5.0) showing the resolution of previously
 identified clusters. By inspecting these resolutions reconcile tree
-produced by mrtree package (v0.0.0.9000 <span
-class="citation">(<strong>pengCellTypeHierarchy2021?</strong>)</span>
-and calculating adjusted multi-resolution Rand index chosen as maximum
-value if there is no higher modularity within 0.05 AMRI difference (see
-SelectResolution in function.R file of code directory).</p>
+produced by mrtree package (v0.0.0.9000) <span class="citation">(Peng et
+al. 2021)</span> and calculating adjusted multi-resolution Rand index
+chosen as maximum value if there is no higher modularity within
+<code>0.05</code> AMRI difference (see <code>SelectResolution</code> in
+<code>function.R</code> file of code directory).</p>
 </div>
 </div>
 <div id="marker-genes" class="section level1">
 <h1>Marker genes</h1>
 <p>Marker genes for each cluster were identified using logreg test <span
-class="citation">(<strong>ntranosDiscriminativeLearningApproach2019?</strong>)</span>
-implemented in Seurat framework (v) <span class="citation">(Stuart and
-Satija 2019)</span>. Genes were considered significant markers for a
-cluster if they had an FDR less than <code>0.001</code>. Identities were
-assigned to each cluster by comparing the detected genes to previously
-published markers and our own validation experiments.</p>
+class="citation">(Ntranos et al. 2019)</span> implemented in Seurat
+framework (v) <span class="citation">(Stuart and Satija 2019)</span>.
+Genes were considered significant markers for a cluster if they had an
+FDR less than <code>0.001</code>. Identities were assigned to each
+cluster by comparing the detected genes to previously published markers
+and our own validation experiments.</p>
 </div>
 <div id="other-packages" class="section level1">
 <h1>Other packages</h1>
 <p>Visualisations and figures were primarily created using the ggplot2
-(v3.4.1) <span
-class="citation">(<strong>Wickham2010-zq?</strong>)</span> and cowplot
-(v1.1.1) <span class="citation">(Wilke 2020)</span> packages using the
-viridis colour palette (v0.6.2) for continuous data. UpSet plots <span
+(v3.4.1), cowplot (v1.1.1) <span class="citation">(Wilke 2020)</span>
+and patchwork (v1.1.2.9000) packages using the viridis colour palette
+(v0.6.2) for continuous data. UpSet plots <span
 class="citation">(Conway, Lex, and Gehlenborg 2017)</span> were produced
 using the UpSetR package (v1.4.0) <span class="citation">(Gehlenborg
 2019)</span> with help from the gridExtra package (v2.3) <span
@@ -957,11 +972,19 @@ class="citation">(Mölder et al. 2021)</span> and the workflowr (v1.7.0)
 <span class="citation">(Blischak, Carbonetto, and Stephens 2021)</span>
 package which was also used to produce the publicly available website
 displaying the analysis code, results and output. Reproducible reports
-were produced using knitr (v1.42) <span
-class="citation">(<strong>Xie2014-ha?</strong>;
-<strong>Xie2016-ct?</strong>; Xie 2023)</span> and R Markdown (v2.20)
-<span class="citation">(<strong>Xie2018-tw?</strong>; Allaire et al.
-2023)</span> and converted to HTML using Pandoc (v2.19.2).</p>
+were produced using knitr (v1.42) <span class="citation">(Xie
+2023)</span> and R Markdown (v2.20) <span class="citation">(Allaire et
+al. 2023)</span> and converted to HTML using Pandoc (v2.19.2).</p>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<div id="output-files" class="section level2">
+<h2>Output files</h2>
+<pre class="r"><code>versions &lt;- purrr::map(versions, as.character)
+versions &lt;- jsonlite::toJSON(versions, pretty = TRUE)
+readr::write_lines(versions,
+                   here::here(&quot;output&quot;, DOCNAME, &quot;package-versions.json&quot;))</code></pre>
+</div>
 </div>
 <div id="references" class="section level1">
 <h1>References</h1>
@@ -981,12 +1004,28 @@ Blischak, John, Peter Carbonetto, and Matthew Stephens. 2021.
 Science</em>. <a
 href="https://github.com/workflowr/workflowr">https://github.com/workflowr/workflowr</a>.
 </div>
+<div id="ref-chungStatisticalSignificanceVariables2015"
+class="csl-entry">
+Chung, Neo Christopher, and John D. Storey. 2015. <span>“Statistical
+significance of variables driving systematic variation in
+high-dimensional data.”</span> <em>Bioinformatics (Oxford, England)</em>
+31 (4): 545–54. <a
+href="https://doi.org/10.1093/bioinformatics/btu674">https://doi.org/10.1093/bioinformatics/btu674</a>.
+</div>
 <div id="ref-conwayUpSetRPackageVisualization2017" class="csl-entry">
 Conway, Jake R, Alexander Lex, and Nils Gehlenborg. 2017. <span>“UpSetR:
 An R Package for the Visualization of Intersecting Sets and Their
 Properties.”</span> Edited by John Hancock. <em>Bioinformatics</em> 33
 (18): 2938–40. <a
 href="https://doi.org/10.1093/bioinformatics/btx364">https://doi.org/10.1093/bioinformatics/btx364</a>.
+</div>
+<div id="ref-fleming2022" class="csl-entry">
+Fleming, Stephen J., Mark D. Chaffin, Alessandro Arduini, Amer-Denis
+Akkad, Eric Banks, John C. Marioni, Anthony A. Philippakis, Patrick T.
+Ellinor, and Mehrtash Babadi. 2022. <span>“Unsupervised Removal of
+Systematic Background Noise from Droplet-Based Single-Cell Experiments
+Using CellBender,”</span> July. <a
+href="https://doi.org/10.1101/791699">https://doi.org/10.1101/791699</a>.
 </div>
 <div id="ref-R-UpSetR" class="csl-entry">
 Gehlenborg, Nils. 2019. <em>UpSetR: A More Scalable Alternative to Venn
@@ -999,6 +1038,14 @@ Variance Stabilization of Single-Cell RNA-Seq Data Using Regularized
 Negative Binomial Regression.”</span> <em>Genome Biology</em> 20 (1):
 296. <a
 href="https://doi.org/10.1186/s13059-019-1874-1">https://doi.org/10.1186/s13059-019-1874-1</a>.
+</div>
+<div id="ref-heatonSouporcellRobustClustering2020" class="csl-entry">
+Heaton, Haynes, Arthur M. Talman, Andrew Knights, Maria Imaz, Daniel J.
+Gaffney, Richard Durbin, Martin Hemberg, and Mara K. N. Lawniczak. 2020.
+<span>“Souporcell: robust clustering of single-cell RNA-seq data by
+genotype without reference genotypes.”</span> <em>Nature methods</em> 17
+(6): 615–20. <a
+href="https://doi.org/10.1038/s41592-020-0820-1">https://doi.org/10.1038/s41592-020-0820-1</a>.
 </div>
 <div id="ref-lunEmptyDropsDistinguishingCells2019" class="csl-entry">
 Lun, Aaron T. L., Samantha Riesenfeld, Tallulah Andrews, The Phuong Dao,
@@ -1014,231 +1061,40 @@ Christopher H. Tomkins-Tinch, Vanessa Sochat, Jan Forster, et al. 2021.
 <em>F1000Research</em> 10 (January): 33. <a
 href="https://doi.org/gjjkwv">https://doi.org/gjjkwv</a>.
 </div>
-<div id="ref-poolEnhancedRecoverySinglecell2022" class="csl-entry">
-Pool, Allan-Hermann, Helen Poldsam, Sisi Chen, Matt Thomson, and Yuki
-Oka. 2022. <span>“Enhanced Recovery of Single-Cell RNA-Sequencing Reads
-for Missing Gene Expression Data,”</span> April. <a
-href="https://doi.org/10.1101/2022.04.26.489449">https://doi.org/10.1101/2022.04.26.489449</a>.
+<div id="ref-ntranos2019" class="csl-entry">
+Ntranos, Vasilis, Lynn Yi, Páll Melsted, and Lior Pachter. 2019.
+<span>“A Discriminative Learning Approach to Differential Expression
+Analysis for Single-Cell RNA-Seq.”</span> <em>Nature Methods</em> 16
+(2): 163–66. <a
+href="https://doi.org/gftsnv">https://doi.org/gftsnv</a>.
 </div>
-<div id="ref-stuartIntegrativeSinglecellAnalysis2019" class="csl-entry">
-Stuart, Tim, and Rahul Satija. 2019. <span>“Integrative single-cell
-analysis.”</span> <em>Nature reviews. Genetics</em> 20 (5): 257–72. <a
-href="https://doi.org/10.1038/s41576-019-0093-7">https://doi.org/10.1038/s41576-019-0093-7</a>.
-</div>
-<div id="ref-traag2019" class="csl-entry">
-Traag, V. A., L. Waltman, and N. J. van Eck. 2019. <span>“From Louvain
-to Leiden: Guaranteeing Well-Connected Communities.”</span>
-<em>Scientific Reports</em> 9 (1): 5233. <a
-href="https://doi.org/10.1038/s41598-019-41695-z">https://doi.org/10.1038/s41598-019-41695-z</a>.
-</div>
-<div id="ref-R-tidyverse" class="csl-entry">
-Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the
-Tidyverse</em>.
-</div>
-<div id="ref-R-dplyr" class="csl-entry">
-Wickham, Hadley, Romain François, Lionel Henry, Kirill Müller, and Davis
-Vaughan. 2023. <em>Dplyr: A Grammar of Data Manipulation</em>.
-</div>
-<div id="ref-R-purrr" class="csl-entry">
-Wickham, Hadley, and Lionel Henry. 2023. <em>Purrr: Functional
-Programming Tools</em>.
-</div>
-<div id="ref-R-tidyr" class="csl-entry">
-Wickham, Hadley, Davis Vaughan, and Maximilian Girlich. 2023. <em>Tidyr:
-Tidy Messy Data</em>.
-</div>
-<div id="ref-R-cowplot" class="csl-entry">
-Wilke, Claus O. 2020. <em>Cowplot: Streamlined Plot Theme and Plot
-Annotations for Ggplot2</em>. <a
-href="https://wilkelab.org/cowplot/">https://wilkelab.org/cowplot/</a>.
-</div>
-<div id="ref-R-knitr" class="csl-entry">
-Xie, Yihui. 2023. <em>Knitr: A General-Purpose Package for Dynamic
-Report Generation in r</em>. <a
-href="https://yihui.org/knitr/">https://yihui.org/knitr/</a>.
-</div>
-<div id="ref-zappiaClusteringTreesVisualization2018" class="csl-entry">
-Zappia, Luke, and Alicia Oshlack. 2018. <span>“Clustering Trees: A
-Visualization for Evaluating Clusterings at Multiple
-Resolutions.”</span> <em>GigaScience</em> 7 (7): giy083. <a
-href="https://doi.org/10.1093/gigascience/giy083">https://doi.org/10.1093/gigascience/giy083</a>.
-</div>
-<div id="ref-zhengMassivelyParallelDigital2017" class="csl-entry">
-Zheng, Grace X. Y., Jessica M. Terry, Phillip Belgrader, Paul Ryvkin,
-Zachary W. Bent, Ryan Wilson, Solongo B. Ziraldo, et al. 2017.
-<span>“Massively parallel digital transcriptional profiling of single
-cells.”</span> <em>Nature communications</em> 8 (January): 14049. <a
-href="https://doi.org/10.1038/ncomms14049">https://doi.org/10.1038/ncomms14049</a>.
-</div>
-</div>
-</div>
-<div id="summary" class="section level1">
-<h1>Summary</h1>
-<div id="output-files" class="section level2">
-<h2>Output files`</h2>
-<pre class="r"><code>versions &lt;- purrr::map(versions, as.character)
-versions &lt;- jsonlite::toJSON(versions, pretty = TRUE)
-readr::write_lines(versions,
-                   here::here(&quot;output&quot;, DOCNAME, &quot;package-versions.json&quot;))</code></pre>
-</div>
-<div id="session-information" class="section level2">
-<h2>Session information</h2>
-<pre class="r"><code>devtools::session_info()</code></pre>
-<pre><code>─ Session info ───────────────────────────────────────────────────────────────
- setting  value
- version  R version 4.2.2 (2022-10-31)
- os       Ubuntu 22.04.1 LTS
- system   x86_64, linux-gnu
- ui       X11
- language en_US:en
- collate  en_US.UTF-8
- ctype    en_US.UTF-8
- tz       Etc/UTC
- date     2023-03-14
- pandoc   2.19.2 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
-
-─ Packages ───────────────────────────────────────────────────────────────────
- package     * version    date (UTC) lib source
- bit           4.0.5      2022-11-15 [2] RSPM (R 4.2.0)
- bit64         4.0.5      2020-08-30 [2] RSPM (R 4.2.0)
- bslib         0.4.2      2022-12-16 [2] RSPM (R 4.2.0)
- cachem        1.0.6      2021-08-19 [2] RSPM (R 4.2.0)
- callr         3.7.3      2022-11-02 [2] RSPM (R 4.2.0)
- cli           3.6.0      2023-01-09 [2] RSPM (R 4.2.2)
- colorspace    2.1-0      2023-01-23 [2] RSPM (R 4.2.2)
- crayon        1.5.2      2022-09-29 [2] RSPM (R 4.2.0)
- devtools      2.4.5      2022-10-11 [2] RSPM (R 4.2.0)
- digest        0.6.31     2022-12-11 [2] RSPM (R 4.2.0)
- dplyr       * 1.1.0      2023-01-29 [2] RSPM (R 4.2.2)
- ellipsis      0.3.2      2021-04-29 [2] RSPM (R 4.2.0)
- evaluate      0.20       2023-01-17 [2] RSPM (R 4.2.2)
- fansi         1.0.4      2023-01-22 [2] RSPM (R 4.2.2)
- fastmap       1.1.0      2021-01-25 [2] RSPM (R 4.2.0)
- forcats     * 0.5.2      2022-08-19 [2] RSPM (R 4.2.0)
- fs            1.6.1      2023-02-06 [2] RSPM (R 4.2.2)
- generics      0.1.3      2022-07-05 [2] RSPM (R 4.2.0)
- getPass       0.2-2      2017-07-21 [2] RSPM (R 4.2.0)
- ggplot2     * 3.4.1      2023-02-10 [2] RSPM (R 4.2.2)
- git2r         0.30.1     2022-03-16 [2] RSPM (R 4.2.0)
- glue        * 1.6.2      2022-02-24 [2] RSPM (R 4.2.0)
- gtable        0.3.1      2022-09-01 [2] RSPM (R 4.2.0)
- here          1.0.1      2020-12-13 [2] RSPM (R 4.2.0)
- hms           1.1.2      2022-08-19 [2] RSPM (R 4.2.0)
- htmltools     0.5.4      2022-12-07 [2] RSPM (R 4.2.0)
- htmlwidgets   1.6.1      2023-01-07 [2] RSPM (R 4.2.0)
- httpuv        1.6.9      2023-02-14 [2] RSPM (R 4.2.2)
- httr          1.4.4      2022-08-17 [2] RSPM (R 4.2.0)
- jquerylib     0.1.4      2021-04-26 [2] RSPM (R 4.2.0)
- jsonlite    * 1.8.4      2022-12-06 [2] RSPM (R 4.2.0)
- knitr       * 1.42       2023-01-25 [2] RSPM (R 4.2.2)
- later         1.3.0      2021-08-18 [2] RSPM (R 4.2.0)
- lifecycle     1.0.3      2022-10-07 [2] RSPM (R 4.2.0)
- lubridate   * 1.9.0      2022-11-06 [2] RSPM (R 4.2.0)
- magrittr      2.0.3      2022-03-30 [2] RSPM (R 4.2.0)
- memoise       2.0.1      2021-11-26 [2] RSPM (R 4.2.0)
- mime          0.12       2021-09-28 [2] RSPM (R 4.2.0)
- miniUI        0.1.1.1    2018-05-18 [2] RSPM (R 4.2.0)
- munsell       0.5.0      2018-06-12 [2] RSPM (R 4.2.0)
- pillar        1.8.1      2022-08-19 [2] RSPM (R 4.2.0)
- pkgbuild      1.4.0      2022-11-27 [2] RSPM (R 4.2.0)
- pkgconfig     2.0.3      2019-09-22 [2] RSPM (R 4.2.0)
- pkgload       1.3.2      2022-11-16 [2] RSPM (R 4.2.0)
- prettyunits   1.1.1      2020-01-24 [2] RSPM (R 4.2.0)
- processx      3.8.0      2022-10-26 [2] RSPM (R 4.2.0)
- profvis       0.3.7      2020-11-02 [2] RSPM (R 4.2.0)
- promises      1.2.0.1    2021-02-11 [2] RSPM (R 4.2.0)
- ps            1.7.2      2022-10-26 [2] RSPM (R 4.2.0)
- purrr       * 1.0.1      2023-01-10 [2] RSPM (R 4.2.2)
- R6            2.5.1      2021-08-19 [2] RSPM (R 4.2.0)
- Rcpp          1.0.10     2023-01-22 [2] RSPM (R 4.2.2)
- readr       * 2.1.3      2022-10-01 [2] RSPM (R 4.2.0)
- remotes       2.4.2      2021-11-30 [2] RSPM (R 4.2.0)
- rlang         1.0.6      2022-09-24 [2] RSPM (R 4.2.0)
- rmarkdown     2.20       2023-01-19 [2] RSPM (R 4.2.2)
- rprojroot     2.0.3      2022-04-02 [2] RSPM (R 4.2.0)
- rstudioapi    0.14       2022-08-22 [2] RSPM (R 4.2.0)
- sass          0.4.5      2023-01-24 [2] RSPM (R 4.2.2)
- scales        1.2.1      2022-08-20 [2] RSPM (R 4.2.0)
- sessioninfo   1.2.2      2021-12-06 [2] RSPM (R 4.2.0)
- shiny         1.7.4      2022-12-15 [2] RSPM (R 4.2.0)
- stringi       1.7.12     2023-01-11 [2] RSPM (R 4.2.2)
- stringr     * 1.5.0      2022-12-02 [2] RSPM (R 4.2.0)
- tibble      * 3.1.8      2022-07-22 [2] RSPM (R 4.2.0)
- tidyr       * 1.3.0      2023-01-24 [2] RSPM (R 4.2.2)
- tidyselect    1.2.0      2022-10-10 [2] RSPM (R 4.2.0)
- tidyverse   * 1.3.2.9000 2023-02-21 [2] Github (tidyverse/tidyverse@d4a33f6)
- timechange  * 0.1.1      2022-11-04 [2] RSPM (R 4.2.0)
- tzdb          0.3.0      2022-03-28 [2] RSPM (R 4.2.0)
- urlchecker    1.0.1      2021-11-30 [2] RSPM (R 4.2.0)
- usethis       2.1.6      2022-05-25 [2] RSPM (R 4.2.0)
- utf8          1.2.3      2023-01-31 [2] RSPM (R 4.2.2)
- vctrs         0.5.2      2023-01-23 [2] RSPM (R 4.2.2)
- vroom         1.6.0      2022-09-30 [2] RSPM (R 4.2.0)
- whisker       0.4.1      2022-12-05 [2] RSPM (R 4.2.0)
- withr         2.5.0      2022-03-03 [2] RSPM (R 4.2.0)
- workflowr   * 1.7.0      2021-12-21 [2] RSPM (R 4.2.0)
- xfun          0.37       2023-01-31 [2] RSPM (R 4.2.2)
- xtable        1.8-4      2019-04-21 [2] RSPM (R 4.2.0)
- yaml          2.3.7      2023-01-23 [2] RSPM (R 4.2.2)
-
- [1] /home/etretiakov/R/x86_64-pc-linux-gnu-library/4.2
- [2] /opt/R/4.2.2/lib/R/library
-
-──────────────────────────────────────────────────────────────────────────────</code></pre>
-<div id="refs" class="references csl-bib-body hanging-indent">
-<div id="ref-R-rmarkdown" class="csl-entry">
-Allaire, JJ, Yihui Xie, Jonathan McPherson, Javier Luraschi, Kevin
-Ushey, Aron Atkins, Hadley Wickham, Joe Cheng, Winston Chang, and
-Richard Iannone. 2023. <em>Rmarkdown: Dynamic Documents for r</em>.
-</div>
-<div id="ref-R-gridExtra" class="csl-entry">
-Auguie, Baptiste. 2017. <em>gridExtra: Miscellaneous Functions for
-"Grid" Graphics</em>.
-</div>
-<div id="ref-R-workflowr" class="csl-entry">
-Blischak, John, Peter Carbonetto, and Matthew Stephens. 2021.
-<em>Workflowr: A Framework for Reproducible and Collaborative Data
-Science</em>. <a
-href="https://github.com/workflowr/workflowr">https://github.com/workflowr/workflowr</a>.
-</div>
-<div id="ref-conwayUpSetRPackageVisualization2017" class="csl-entry">
-Conway, Jake R, Alexander Lex, and Nils Gehlenborg. 2017. <span>“UpSetR:
-An R Package for the Visualization of Intersecting Sets and Their
-Properties.”</span> Edited by John Hancock. <em>Bioinformatics</em> 33
-(18): 2938–40. <a
-href="https://doi.org/10.1093/bioinformatics/btx364">https://doi.org/10.1093/bioinformatics/btx364</a>.
-</div>
-<div id="ref-R-UpSetR" class="csl-entry">
-Gehlenborg, Nils. 2019. <em>UpSetR: A More Scalable Alternative to Venn
-and Euler Diagrams for Visualizing Intersecting Sets</em>. <a
-href="http://github.com/hms-dbmi/UpSetR">http://github.com/hms-dbmi/UpSetR</a>.
-</div>
-<div id="ref-hafemeister2019" class="csl-entry">
-Hafemeister, Christoph, and Rahul Satija. 2019. <span>“Normalization and
-Variance Stabilization of Single-Cell RNA-Seq Data Using Regularized
-Negative Binomial Regression.”</span> <em>Genome Biology</em> 20 (1):
-296. <a
-href="https://doi.org/10.1186/s13059-019-1874-1">https://doi.org/10.1186/s13059-019-1874-1</a>.
-</div>
-<div id="ref-lunEmptyDropsDistinguishingCells2019" class="csl-entry">
-Lun, Aaron T. L., Samantha Riesenfeld, Tallulah Andrews, The Phuong Dao,
-Tomas Gomes, and John C. Marioni. 2019. <span>“EmptyDrops:
-distinguishing cells from empty droplets in droplet-based single-cell
-RNA sequencing data.”</span> <em>Genome biology</em> 20 (1): 63. <a
-href="https://doi.org/10.1186/s13059-019-1662-y">https://doi.org/10.1186/s13059-019-1662-y</a>.
-</div>
-<div id="ref-molderSustainableDataAnalysis2021" class="csl-entry">
-Mölder, Felix, Kim Philipp Jablonski, Brice Letcher, Michael B. Hall,
-Christopher H. Tomkins-Tinch, Vanessa Sochat, Jan Forster, et al. 2021.
-<span>“Sustainable Data Analysis with Snakemake.”</span>
-<em>F1000Research</em> 10 (January): 33. <a
-href="https://doi.org/gjjkwv">https://doi.org/gjjkwv</a>.
+<div id="ref-pengCellTypeHierarchy2021" class="csl-entry">
+Peng, Minshi, Brie Wamsley, Andrew G. Elkins, Daniel H. Geschwind,
+Yuting Wei, and Kathryn Roeder. 2021. <span>“Cell type hierarchy
+reconstruction via reconciliation of multi-resolution cluster
+tree.”</span> <em>Nucleic acids research</em> 49 (16): e91. <a
+href="https://doi.org/10.1093/nar/gkab481">https://doi.org/10.1093/nar/gkab481</a>.
 </div>
 <div id="ref-poolEnhancedRecoverySinglecell2022" class="csl-entry">
 Pool, Allan-Hermann, Helen Poldsam, Sisi Chen, Matt Thomson, and Yuki
 Oka. 2022. <span>“Enhanced Recovery of Single-Cell RNA-Sequencing Reads
 for Missing Gene Expression Data,”</span> April. <a
 href="https://doi.org/10.1101/2022.04.26.489449">https://doi.org/10.1101/2022.04.26.489449</a>.
+</div>
+<div id="ref-reimandProfileraWebServer2016" class="csl-entry">
+Reimand, Jüri, Tambet Arak, Priit Adler, Liis Kolberg, Sulev Reisberg,
+Hedi Peterson, and Jaak Vilo. 2016. <span>“g:Profiler-a web server for
+functional interpretation of gene lists (2016 update).”</span>
+<em>Nucleic acids research</em> 44 (W1): W83–89. <a
+href="https://doi.org/10.1093/nar/gkw199">https://doi.org/10.1093/nar/gkw199</a>.
+</div>
+<div id="ref-satijaSpatialReconstructionSinglecell2015"
+class="csl-entry">
+Satija, Rahul, Jeffrey A. Farrell, David Gennert, Alexander F. Schier,
+and Aviv Regev. 2015. <span>“Spatial reconstruction of single-cell gene
+expression data.”</span> <em>Nature biotechnology</em> 33 (5): 495–502.
+<a
+href="https://doi.org/10.1038/nbt.3192">https://doi.org/10.1038/nbt.3192</a>.
 </div>
 <div id="ref-stuartIntegrativeSinglecellAnalysis2019" class="csl-entry">
 Stuart, Tim, and Rahul Satija. 2019. <span>“Integrative single-cell
@@ -1324,28 +1180,22 @@ other attached packages:
  [4] stringr_1.5.0        dplyr_1.1.0          purrr_1.0.1         
  [7] readr_2.1.3          tidyr_1.3.0          tibble_3.1.8        
 [10] ggplot2_3.4.1        tidyverse_1.3.2.9000 jsonlite_1.8.4      
-[13] knitr_1.42           glue_1.6.2           workflowr_1.7.0     
+[13] knitr_1.42           glue_1.6.2          
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.10       here_1.0.1        prettyunits_1.1.1 getPass_0.2-2    
- [5] ps_1.7.2          rprojroot_2.0.3   digest_0.6.31     utf8_1.2.3       
- [9] mime_0.12         R6_2.5.1          evaluate_0.20     httr_1.4.4       
-[13] pillar_1.8.1      rlang_1.0.6       rstudioapi_0.14   miniUI_0.1.1.1   
-[17] urlchecker_1.0.1  whisker_0.4.1     callr_3.7.3       jquerylib_0.1.4  
-[21] rmarkdown_2.20    devtools_2.4.5    htmlwidgets_1.6.1 bit_4.0.5        
-[25] munsell_0.5.0     shiny_1.7.4       compiler_4.2.2    httpuv_1.6.9     
-[29] xfun_0.37         pkgconfig_2.0.3   pkgbuild_1.4.0    htmltools_0.5.4  
-[33] tidyselect_1.2.0  fansi_1.0.4       crayon_1.5.2      tzdb_0.3.0       
-[37] withr_2.5.0       later_1.3.0       grid_4.2.2        xtable_1.8-4     
-[41] gtable_0.3.1      lifecycle_1.0.3   git2r_0.30.1      magrittr_2.0.3   
-[45] scales_1.2.1      cli_3.6.0         stringi_1.7.12    vroom_1.6.0      
-[49] cachem_1.0.6      remotes_2.4.2     fs_1.6.1          promises_1.2.0.1 
-[53] bslib_0.4.2       ellipsis_0.3.2    generics_0.1.3    vctrs_0.5.2      
-[57] tools_4.2.2       bit64_4.0.5       hms_1.1.2         pkgload_1.3.2    
-[61] processx_3.8.0    parallel_4.2.2    fastmap_1.1.0     yaml_2.3.7       
-[65] colorspace_2.1-0  sessioninfo_1.2.2 memoise_2.0.1     usethis_2.1.6    
-[69] profvis_0.3.7     sass_0.4.5       </code></pre>
-</div>
+ [1] tidyselect_1.2.0 xfun_0.37        bslib_0.4.2      colorspace_2.1-0
+ [5] vctrs_0.5.2      generics_0.1.3   htmltools_0.5.4  yaml_2.3.7      
+ [9] utf8_1.2.3       rlang_1.0.6      jquerylib_0.1.4  later_1.3.0     
+[13] pillar_1.8.1     withr_2.5.0      bit64_4.0.5      lifecycle_1.0.3 
+[17] munsell_0.5.0    gtable_0.3.1     workflowr_1.7.0  evaluate_0.20   
+[21] tzdb_0.3.0       fastmap_1.1.0    httpuv_1.6.9     parallel_4.2.2  
+[25] fansi_1.0.4      Rcpp_1.0.10      promises_1.2.0.1 scales_1.2.1    
+[29] cachem_1.0.6     vroom_1.6.0      bit_4.0.5        fs_1.6.1        
+[33] hms_1.1.2        digest_0.6.31    stringi_1.7.12   rprojroot_2.0.3 
+[37] grid_4.2.2       here_1.0.1       cli_3.6.0        tools_4.2.2     
+[41] magrittr_2.0.3   sass_0.4.5       crayon_1.5.2     whisker_0.4.1   
+[45] pkgconfig_2.0.3  ellipsis_0.3.2   rmarkdown_2.20   rstudioapi_0.14 
+[49] R6_2.5.1         git2r_0.30.1     compiler_4.2.2  </code></pre>
 </div>
 </div>
 
