@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Evgenii O. Tretiakov" />
+
+<meta name="date" content="2023-03-14" />
+
+<title>Methods</title>
+
+<script src="site_libs/header-attrs-2.20/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Hevesi_2023</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="eda.html">Exploratory analysis, QC, DR and clustering</a>
+    </li>
+    <li class="dropdown-submenu">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Figures</a>
+      <ul class="dropdown-menu" role="menu">
+        <li>
+          <a href="figure_2d-THP7.html">Fig.2D. Ventrobasal thalamus</a>
+        </li>
+        <li>
+          <a href="figure_2e-Pr5P7.html">Fig.2E. Principal sensory trigeminal nucleus</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Cell Ranger Reports
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="Pr5P7_cellranger_summary.html">principal sensory trigeminal nucleus</a>
+    </li>
+    <li>
+      <a href="THP7_cellranger_summary.html">ventrobasal thalamus</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="methods.html">Methods</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="license.html">License</a>
+</li>
+<li>
+  <a href="https://github.com/Harkany-Lab/Hevesi_2023">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Methods</h1>
+<h4 class="author">Evgenii O. Tretiakov</h4>
+<h4 class="date">2023-03-14</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-03-14
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>Hevesi_2023/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20230121code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20230121)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20230121code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20230121)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023treea7f002debf66b9e92a9d8bdeccfc429951793a92targetblanka7f002da">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/a7f002debf66b9e92a9d8bdeccfc429951793a92" target="_blank">a7f002d</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomHarkanyLabHevesi2023treea7f002debf66b9e92a9d8bdeccfc429951793a92targetblanka7f002da"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/tree/a7f002debf66b9e92a9d8bdeccfc429951793a92" target="_blank">a7f002d</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .cache/
+    Ignored:    .config/
+    Ignored:    .nv/
+    Ignored:    .snakemake/
+    Ignored:    cellbender/
+    Ignored:    cellbender_latest.sif
+    Ignored:    cellranger/
+    Ignored:    data/Pr5P7_clusters.h5Seurat
+    Ignored:    data/Pr5P7_clusters.h5ad
+    Ignored:    data/THP7_clusters.h5Seurat
+    Ignored:    data/THP7_clusters.h5ad
+    Ignored:    data/neuro_fin-THP7.h5seurat
+    Ignored:    data/neuro_fin.h5seurat
+    Ignored:    fastq/
+    Ignored:    mm10_optimized/
+    Ignored:    souporcell/
+    Ignored:    souporcell_latest.sif
+
+Unstaged changes:
+    Modified:   output/figures/Pr5P7_sex_umap.pdf
+    Modified:   output/figures/Pr5P7_stress_umap.pdf
+    Modified:   output/figures/Pr5P7_top5_umap.pdf
+    Modified:   output/figures/THP7_sex_umap.pdf
+    Modified:   output/figures/THP7_stress_umap.pdf
+    Modified:   output/figures/THP7_top5_umap.pdf
+    Modified:   output/figures/combined_sex_umap.pdf
+    Modified:   output/figures/combined_stress_umap.pdf
+    Modified:   output/figures/combined_top5_umap.pdf
+    Modified:   output/tables/hevesi2023-all-mrk_logreg-sct_combined.csv
+    Modified:   output/tables/hevesi2023-all-mrk_wilcox-sct_combined.csv
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/methods.Rmd</code>) and HTML
+(<code>docs/methods.html</code>) files. If you’ve configured a remote
+Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/blob/a7f002debf66b9e92a9d8bdeccfc429951793a92/analysis/methods.Rmd" target="_blank">a7f002d</a>
+</td>
+<td>
+EugOT
+</td>
+<td>
+2023-03-14
+</td>
+<td>
+update bib
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/blob/edcb9369f89acbe835522ee5071441a18a561978/analysis/methods.Rmd" target="_blank">edcb936</a>
+</td>
+<td>
+Evgenii O. Tretiakov
+</td>
+<td>
+2023-03-14
+</td>
+<td>
+update methods
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/Harkany-Lab/Hevesi_2023/blob/3b155adfb5a54daa3f683c3ca7fc65f4d046c46a/analysis/methods.Rmd" target="_blank">3b155ad</a>
+</td>
+<td>
+Evgenii O. Tretiakov
+</td>
+<td>
+2023-03-05
+</td>
+<td>
+add figures code
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code># Presentation
+library(&quot;glue&quot;)
+library(&quot;knitr&quot;)
+
+# JSON
+library(&quot;jsonlite&quot;)
+
+# Tidyverse
+library(&quot;tidyverse&quot;)</code></pre>
+<pre class="r"><code>dir.create(here::here(&quot;output&quot;, DOCNAME), showWarnings = FALSE)
+
+write_bib(c(&quot;base&quot;, &quot;Seurat&quot;, &quot;SeuratWrappers&quot;, &quot;SeuratDisk&quot;, &quot;sctransform&quot;,
+            &quot;glmGamPoi&quot;, &quot;patchwork&quot;, &quot;scCustomize&quot;, &quot;Nebulosa&quot;, &quot;clustree&quot;,
+            &quot;mrtree&quot;, &quot;gprofiler2&quot;, &quot;cowplot&quot;, &quot;UpSetR&quot;, &quot;ggstatsplot&quot;,
+            &quot;gridExtra&quot;, &quot;tidyverse&quot;, &quot;dplyr&quot;, &quot;tidyr&quot;, &quot;magrittr&quot;, &quot;stringr&quot;,
+            &quot;skimr&quot;, &quot;future&quot;, &quot;purrr&quot;, &quot;here&quot;, &quot;workflowr&quot;, &quot;zeallot&quot;, &quot;knitr&quot;,
+            &quot;kableExtra&quot;, &quot;rmarkdown&quot;, &quot;reticulate&quot;),
+          file = here::here(&quot;output&quot;, DOCNAME, &quot;packages.bib&quot;))</code></pre>
+<pre class="r"><code>versions &lt;- list(
+    biomaRt        = packageVersion(&quot;biomaRt&quot;),
+    cellbender     = &quot;docker://etretiakov/cellbender:v0.0.1&quot;,
+    cellranger     = &quot;7.1.0&quot;,
+    cellranger_ref = &quot;mm10_optimized_v.1.0&quot;,
+    clustree       = packageVersion(&quot;clustree&quot;),
+    cowplot        = packageVersion(&quot;cowplot&quot;),
+    dplyr          = packageVersion(&quot;dplyr&quot;),
+    future         = packageVersion(&quot;future&quot;),
+    ggplot2        = packageVersion(&quot;ggplot2&quot;),
+    ggstatsplot    = packageVersion(&quot;ggstatsplot&quot;),
+    glmGamPoi      = packageVersion(&quot;glmGamPoi&quot;),
+    gprofiler2     = packageVersion(&quot;gprofiler2&quot;),
+    gridExtra      = packageVersion(&quot;gridExtra&quot;),
+    here           = packageVersion(&quot;here&quot;),
+    kableExtra     = packageVersion(&quot;kableExtra&quot;),
+    knitr          = packageVersion(&quot;knitr&quot;),
+    magrittr       = packageVersion(&quot;magrittr&quot;),
+    mrtree         = packageVersion(&quot;mrtree&quot;),
+    Nebulosa       = packageVersion(&quot;Nebulosa&quot;),
+    pandoc         = rmarkdown::pandoc_version(),
+    patchwork      = packageVersion(&quot;patchwork&quot;),
+    purrr          = packageVersion(&quot;purrr&quot;),
+    python         = &quot;3.8.8&quot;,
+    R              = str_extract(R.version.string, &quot;[0-9\\.]+&quot;),
+    reticulate     = packageVersion(&quot;reticulate&quot;),
+    rmarkdown      = packageVersion(&quot;rmarkdown&quot;),
+    scCustomize    = packageVersion(&quot;scCustomize&quot;),
+    sctransform    = packageVersion(&quot;sctransform&quot;),
+    Seurat         = packageVersion(&quot;Seurat&quot;),
+    skimr          = packageVersion(&quot;skimr&quot;),
+    stringr        = packageVersion(&quot;stringr&quot;),
+    Snakemake      = &quot;7.21.0&quot;,
+    souporcell     = &quot;shub://wheaton5/souporcell&quot;,
+    tidyr          = packageVersion(&quot;tidyr&quot;),
+    tidyverse      = packageVersion(&quot;tidyverse&quot;),
+    UpSetR         = packageVersion(&quot;UpSetR&quot;),
+    viridis        = packageVersion(&quot;viridis&quot;),
+    workflowr      = packageVersion(&quot;workflowr&quot;),
+    zeallot        = packageVersion(&quot;zeallot&quot;)
+)</code></pre>
+<div id="pre-processing" class="section level1">
+<h1>Pre-processing</h1>
+<p>The Cell Ranger pipeline (v7.1.0) <span class="citation">(Zheng et
+al. 2017)</span> was used to perform sample demultiplexing, barcode
+processing and single-nuclei gene counting. Briefly, samples were
+demultiplexed to produce a pair of FASTQ files for each sample. Reads
+containing sequence information were aligned using the optimised mouse
+genome reference (vmm10_optimized_v.1.0) provided by Pool’s lab based on
+the default Cell Ranger mm10 genome version 2020-A that was cleared from
+gene overlaps, poorly annotated exons and 3’-UTRs and intergenic
+fragments <span class="citation">(Pool et al. 2022)</span>. PCR
+duplicates were removed by selecting unique combinations of cell
+barcodes, unique molecular identifiers (UMIs) and gene ids with the
+final results being a gene expression matrix that was used for further
+analysis.</p>
+</div>
+<div id="quality-control" class="section level1">
+<h1>Quality control</h1>
+<div id="droplet-selection" class="section level2">
+<h2>Droplet selection</h2>
+<p>The droplet selection method of Cell Ranger identified 923 nuclei in
+ventrobasal thalamus and in principal sensory trigeminal nucleus - 731
+nuclei based on EmptyDrops method <span class="citation">(Lun et al.
+2019)</span> incorporated into cellranger count pipeline.</p>
+</div>
+<div id="ambient-rna-removal" class="section level2">
+<h2>Ambient RNA removal</h2>
+<p>Using those values as expected number of cells we applied neural
+network-based approach called CellBender
+(docker://etretiakov/cellbender:v0.0.1) <span
+class="citation">(<strong>flemingUnsupervisedRemovalSystematic2022?</strong>)</span>.
+We set false positive rate threshold at the level of 0.01 and set neural
+network to learn over 150 epoch with total 5000 droplets included based
+on knee plots (please see online supplementary Cell Ranger reports).</p>
+</div>
+<div id="doublets-detection" class="section level2">
+<h2>Doublets detection</h2>
+<p>We quantified log probability to be a doublet for every cell based on
+apriori knowledge of genotypes from each input samples and called
+variant occurrence frequencies that allowed to cluster nuclei to source
+organism or classify as a doublet <span
+class="citation">(<strong>heatonSouporcellRobustClustering2020?</strong>)</span>
+(see shub://wheaton5/souporcell) .</p>
+</div>
+<div id="further-filtering" class="section level2">
+<h2>Further filtering</h2>
+<p>Gene annotation information was added using the gprofiler2 package
+(v2.54.0, docker://etretiakov/cellbender:v0.0.1, 7.1.0,
+mm10_optimized_v.1.0, 0.5.0, 1.1.1, 1.1.0, 1.31.0, 3.4.1, 0.10.0,
+1.10.2, 0.2.1, 2.3, 1.0.1, 1.3.4, 1.42, 2.0.3, 0.0.0.9000, 1.8.0,
+2.19.2, 1.1.2.9000, 1.0.1, 3.8.8, 4.2.2, 1.28, 2.20, 1.1.1, 0.3.5,
+4.3.0, 2.1.5, 1.5.0, 7.21.0, shub://wheaton5/souporcell, 1.3.0,
+1.3.2.9000, 1.4.0, 0.6.2, 1.7.0, 0.1.0$gprofiler2)
+[@reimandProfileraWebServer2016]; thus we filter cells based on high
+content of mitochondrial, ribosomal or hemoglobin proteins genes,
+specifically 1%, 1% and 0.5%; additionally pseudogenes and poorly
+annotated genes were also deleted from count matrix. Moreover, cells of
+low complexity were filtered out as (<span
+class="math inline">\(\log_{10}Genes/\log_{10}UMI &lt; 0.8\)</span>).
+Therefore, cells were assigned cell cycle scores using the
+CellCycleScoring function in the Seurat package (v4.3.0).</p>
+</div>
+</div>
+<div id="clustering" class="section level1">
+<h1>Clustering</h1>
+<div id="gene-selection" class="section level2">
+<h2>Gene selection</h2>
+<p>We used the selection method in the Seurat package (v4.3.0) <span
+class="citation">(<strong>Satija2015-or?</strong>; Stuart and Satija
+2019)</span>, which uses a modern variance stabilising transformation
+statistical technic that utilises scaling to person residuals <span
+class="citation">(Hafemeister and Satija 2019)</span>. That way we
+selected 3000 highly variable genes per dataset and regressed out
+complexity and cell-cycle variability prior to final scaling of filtered
+matrixes.</p>
+</div>
+<div id="graph-based-and-multi-level-reconcile-tree-clustering"
+class="section level2">
+<h2>Graph-based and multi-level reconcile tree clustering</h2>
+<p>We performed Leiden algorithm graph-based clustering. PCA was
+performed using the selected genes and the jacknife tested <span
+class="citation">(<strong>chungStatisticalSignificanceVariables2015?</strong>)</span>
+principal components (we tested significance of feature for randomly
+picked 1% of data over 1000 iterations; see PCScore function in
+functions.R script of code directory) were used to construct a shared
+nearest neighbour graph using the overlap between the <code>15</code>
+nearest neighbours of each cell. Leiden modularity optimisation <span
+class="citation">(Traag, Waltman, and Eck 2019)</span> was used to
+partition this graph with an array of resolution parameters where 30
+modularity events were sampled between <code>0.2</code> and
+<code>2.5</code>. Clustering tree visualisations <span
+class="citation">(Zappia and Oshlack 2018)</span> were produced using
+the clustree package (v0.5.0) showing the resolution of previously
+identified clusters. By inspecting these resolutions reconcile tree
+produced by mrtree package (v0.0.0.9000 <span
+class="citation">(<strong>pengCellTypeHierarchy2021?</strong>)</span>
+and calculating adjusted multi-resolution Rand index chosen as maximum
+value if there is no higher modularity within 0.05 AMRI difference (see
+SelectResolution in function.R file of code directory).</p>
+</div>
+</div>
+<div id="marker-genes" class="section level1">
+<h1>Marker genes</h1>
+<p>Marker genes for each cluster were identified using logreg test <span
+class="citation">(<strong>ntranosDiscriminativeLearningApproach2019?</strong>)</span>
+implemented in Seurat framework (v) <span class="citation">(Stuart and
+Satija 2019)</span>. Genes were considered significant markers for a
+cluster if they had an FDR less than <code>0.001</code>. Identities were
+assigned to each cluster by comparing the detected genes to previously
+published markers and our own validation experiments.</p>
+</div>
+<div id="other-packages" class="section level1">
+<h1>Other packages</h1>
+<p>Visualisations and figures were primarily created using the ggplot2
+(v3.4.1) <span
+class="citation">(<strong>Wickham2010-zq?</strong>)</span> and cowplot
+(v1.1.1) <span class="citation">(Wilke 2020)</span> packages using the
+viridis colour palette (v0.6.2) for continuous data. UpSet plots <span
+class="citation">(Conway, Lex, and Gehlenborg 2017)</span> were produced
+using the UpSetR package (v1.4.0) <span class="citation">(Gehlenborg
+2019)</span> with help from the gridExtra package (v2.3) <span
+class="citation">(Auguie 2017)</span>. Data manipulation was performed
+using other packages in the tidyverse (v1.3.2.9000) <span
+class="citation">(Wickham 2023)</span> particularly dplyr (v1.1.0) <span
+class="citation">(Wickham et al. 2023)</span>, tidyr (v1.1.0) <span
+class="citation">(Wickham, Vaughan, and Girlich 2023)</span> and purrr
+(v1.0.1) <span class="citation">(Wickham and Henry 2023)</span>. The
+analysis project was managed using the Snakemake system (v ) <span
+class="citation">(Mölder et al. 2021)</span> and the workflowr (v1.7.0)
+<span class="citation">(Blischak, Carbonetto, and Stephens 2021)</span>
+package which was also used to produce the publicly available website
+displaying the analysis code, results and output. Reproducible reports
+were produced using knitr (v1.42) <span
+class="citation">(<strong>Xie2014-ha?</strong>;
+<strong>Xie2016-ct?</strong>; Xie 2023)</span> and R Markdown (v2.20)
+<span class="citation">(<strong>Xie2018-tw?</strong>; Allaire et al.
+2023)</span> and converted to HTML using Pandoc (v2.19.2).</p>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-R-rmarkdown" class="csl-entry">
+Allaire, JJ, Yihui Xie, Jonathan McPherson, Javier Luraschi, Kevin
+Ushey, Aron Atkins, Hadley Wickham, Joe Cheng, Winston Chang, and
+Richard Iannone. 2023. <em>Rmarkdown: Dynamic Documents for r</em>.
+</div>
+<div id="ref-R-gridExtra" class="csl-entry">
+Auguie, Baptiste. 2017. <em>gridExtra: Miscellaneous Functions for
+"Grid" Graphics</em>.
+</div>
+<div id="ref-R-workflowr" class="csl-entry">
+Blischak, John, Peter Carbonetto, and Matthew Stephens. 2021.
+<em>Workflowr: A Framework for Reproducible and Collaborative Data
+Science</em>. <a
+href="https://github.com/workflowr/workflowr">https://github.com/workflowr/workflowr</a>.
+</div>
+<div id="ref-conwayUpSetRPackageVisualization2017" class="csl-entry">
+Conway, Jake R, Alexander Lex, and Nils Gehlenborg. 2017. <span>“UpSetR:
+An R Package for the Visualization of Intersecting Sets and Their
+Properties.”</span> Edited by John Hancock. <em>Bioinformatics</em> 33
+(18): 2938–40. <a
+href="https://doi.org/10.1093/bioinformatics/btx364">https://doi.org/10.1093/bioinformatics/btx364</a>.
+</div>
+<div id="ref-R-UpSetR" class="csl-entry">
+Gehlenborg, Nils. 2019. <em>UpSetR: A More Scalable Alternative to Venn
+and Euler Diagrams for Visualizing Intersecting Sets</em>. <a
+href="http://github.com/hms-dbmi/UpSetR">http://github.com/hms-dbmi/UpSetR</a>.
+</div>
+<div id="ref-hafemeister2019" class="csl-entry">
+Hafemeister, Christoph, and Rahul Satija. 2019. <span>“Normalization and
+Variance Stabilization of Single-Cell RNA-Seq Data Using Regularized
+Negative Binomial Regression.”</span> <em>Genome Biology</em> 20 (1):
+296. <a
+href="https://doi.org/10.1186/s13059-019-1874-1">https://doi.org/10.1186/s13059-019-1874-1</a>.
+</div>
+<div id="ref-lunEmptyDropsDistinguishingCells2019" class="csl-entry">
+Lun, Aaron T. L., Samantha Riesenfeld, Tallulah Andrews, The Phuong Dao,
+Tomas Gomes, and John C. Marioni. 2019. <span>“EmptyDrops:
+distinguishing cells from empty droplets in droplet-based single-cell
+RNA sequencing data.”</span> <em>Genome biology</em> 20 (1): 63. <a
+href="https://doi.org/10.1186/s13059-019-1662-y">https://doi.org/10.1186/s13059-019-1662-y</a>.
+</div>
+<div id="ref-molderSustainableDataAnalysis2021" class="csl-entry">
+Mölder, Felix, Kim Philipp Jablonski, Brice Letcher, Michael B. Hall,
+Christopher H. Tomkins-Tinch, Vanessa Sochat, Jan Forster, et al. 2021.
+<span>“Sustainable Data Analysis with Snakemake.”</span>
+<em>F1000Research</em> 10 (January): 33. <a
+href="https://doi.org/gjjkwv">https://doi.org/gjjkwv</a>.
+</div>
+<div id="ref-poolEnhancedRecoverySinglecell2022" class="csl-entry">
+Pool, Allan-Hermann, Helen Poldsam, Sisi Chen, Matt Thomson, and Yuki
+Oka. 2022. <span>“Enhanced Recovery of Single-Cell RNA-Sequencing Reads
+for Missing Gene Expression Data,”</span> April. <a
+href="https://doi.org/10.1101/2022.04.26.489449">https://doi.org/10.1101/2022.04.26.489449</a>.
+</div>
+<div id="ref-stuartIntegrativeSinglecellAnalysis2019" class="csl-entry">
+Stuart, Tim, and Rahul Satija. 2019. <span>“Integrative single-cell
+analysis.”</span> <em>Nature reviews. Genetics</em> 20 (5): 257–72. <a
+href="https://doi.org/10.1038/s41576-019-0093-7">https://doi.org/10.1038/s41576-019-0093-7</a>.
+</div>
+<div id="ref-traag2019" class="csl-entry">
+Traag, V. A., L. Waltman, and N. J. van Eck. 2019. <span>“From Louvain
+to Leiden: Guaranteeing Well-Connected Communities.”</span>
+<em>Scientific Reports</em> 9 (1): 5233. <a
+href="https://doi.org/10.1038/s41598-019-41695-z">https://doi.org/10.1038/s41598-019-41695-z</a>.
+</div>
+<div id="ref-R-tidyverse" class="csl-entry">
+Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the
+Tidyverse</em>.
+</div>
+<div id="ref-R-dplyr" class="csl-entry">
+Wickham, Hadley, Romain François, Lionel Henry, Kirill Müller, and Davis
+Vaughan. 2023. <em>Dplyr: A Grammar of Data Manipulation</em>.
+</div>
+<div id="ref-R-purrr" class="csl-entry">
+Wickham, Hadley, and Lionel Henry. 2023. <em>Purrr: Functional
+Programming Tools</em>.
+</div>
+<div id="ref-R-tidyr" class="csl-entry">
+Wickham, Hadley, Davis Vaughan, and Maximilian Girlich. 2023. <em>Tidyr:
+Tidy Messy Data</em>.
+</div>
+<div id="ref-R-cowplot" class="csl-entry">
+Wilke, Claus O. 2020. <em>Cowplot: Streamlined Plot Theme and Plot
+Annotations for Ggplot2</em>. <a
+href="https://wilkelab.org/cowplot/">https://wilkelab.org/cowplot/</a>.
+</div>
+<div id="ref-R-knitr" class="csl-entry">
+Xie, Yihui. 2023. <em>Knitr: A General-Purpose Package for Dynamic
+Report Generation in r</em>. <a
+href="https://yihui.org/knitr/">https://yihui.org/knitr/</a>.
+</div>
+<div id="ref-zappiaClusteringTreesVisualization2018" class="csl-entry">
+Zappia, Luke, and Alicia Oshlack. 2018. <span>“Clustering Trees: A
+Visualization for Evaluating Clusterings at Multiple
+Resolutions.”</span> <em>GigaScience</em> 7 (7): giy083. <a
+href="https://doi.org/10.1093/gigascience/giy083">https://doi.org/10.1093/gigascience/giy083</a>.
+</div>
+<div id="ref-zhengMassivelyParallelDigital2017" class="csl-entry">
+Zheng, Grace X. Y., Jessica M. Terry, Phillip Belgrader, Paul Ryvkin,
+Zachary W. Bent, Ryan Wilson, Solongo B. Ziraldo, et al. 2017.
+<span>“Massively parallel digital transcriptional profiling of single
+cells.”</span> <em>Nature communications</em> 8 (January): 14049. <a
+href="https://doi.org/10.1038/ncomms14049">https://doi.org/10.1038/ncomms14049</a>.
+</div>
+</div>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<div id="output-files" class="section level2">
+<h2>Output files`</h2>
+<pre class="r"><code>versions &lt;- purrr::map(versions, as.character)
+versions &lt;- jsonlite::toJSON(versions, pretty = TRUE)
+readr::write_lines(versions,
+                   here::here(&quot;output&quot;, DOCNAME, &quot;package-versions.json&quot;))</code></pre>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>devtools::session_info()</code></pre>
+<pre><code>─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.2.2 (2022-10-31)
+ os       Ubuntu 22.04.1 LTS
+ system   x86_64, linux-gnu
+ ui       X11
+ language en_US:en
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       Etc/UTC
+ date     2023-03-14
+ pandoc   2.19.2 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package     * version    date (UTC) lib source
+ bit           4.0.5      2022-11-15 [2] RSPM (R 4.2.0)
+ bit64         4.0.5      2020-08-30 [2] RSPM (R 4.2.0)
+ bslib         0.4.2      2022-12-16 [2] RSPM (R 4.2.0)
+ cachem        1.0.6      2021-08-19 [2] RSPM (R 4.2.0)
+ callr         3.7.3      2022-11-02 [2] RSPM (R 4.2.0)
+ cli           3.6.0      2023-01-09 [2] RSPM (R 4.2.2)
+ colorspace    2.1-0      2023-01-23 [2] RSPM (R 4.2.2)
+ crayon        1.5.2      2022-09-29 [2] RSPM (R 4.2.0)
+ devtools      2.4.5      2022-10-11 [2] RSPM (R 4.2.0)
+ digest        0.6.31     2022-12-11 [2] RSPM (R 4.2.0)
+ dplyr       * 1.1.0      2023-01-29 [2] RSPM (R 4.2.2)
+ ellipsis      0.3.2      2021-04-29 [2] RSPM (R 4.2.0)
+ evaluate      0.20       2023-01-17 [2] RSPM (R 4.2.2)
+ fansi         1.0.4      2023-01-22 [2] RSPM (R 4.2.2)
+ fastmap       1.1.0      2021-01-25 [2] RSPM (R 4.2.0)
+ forcats     * 0.5.2      2022-08-19 [2] RSPM (R 4.2.0)
+ fs            1.6.1      2023-02-06 [2] RSPM (R 4.2.2)
+ generics      0.1.3      2022-07-05 [2] RSPM (R 4.2.0)
+ getPass       0.2-2      2017-07-21 [2] RSPM (R 4.2.0)
+ ggplot2     * 3.4.1      2023-02-10 [2] RSPM (R 4.2.2)
+ git2r         0.30.1     2022-03-16 [2] RSPM (R 4.2.0)
+ glue        * 1.6.2      2022-02-24 [2] RSPM (R 4.2.0)
+ gtable        0.3.1      2022-09-01 [2] RSPM (R 4.2.0)
+ here          1.0.1      2020-12-13 [2] RSPM (R 4.2.0)
+ hms           1.1.2      2022-08-19 [2] RSPM (R 4.2.0)
+ htmltools     0.5.4      2022-12-07 [2] RSPM (R 4.2.0)
+ htmlwidgets   1.6.1      2023-01-07 [2] RSPM (R 4.2.0)
+ httpuv        1.6.9      2023-02-14 [2] RSPM (R 4.2.2)
+ httr          1.4.4      2022-08-17 [2] RSPM (R 4.2.0)
+ jquerylib     0.1.4      2021-04-26 [2] RSPM (R 4.2.0)
+ jsonlite    * 1.8.4      2022-12-06 [2] RSPM (R 4.2.0)
+ knitr       * 1.42       2023-01-25 [2] RSPM (R 4.2.2)
+ later         1.3.0      2021-08-18 [2] RSPM (R 4.2.0)
+ lifecycle     1.0.3      2022-10-07 [2] RSPM (R 4.2.0)
+ lubridate   * 1.9.0      2022-11-06 [2] RSPM (R 4.2.0)
+ magrittr      2.0.3      2022-03-30 [2] RSPM (R 4.2.0)
+ memoise       2.0.1      2021-11-26 [2] RSPM (R 4.2.0)
+ mime          0.12       2021-09-28 [2] RSPM (R 4.2.0)
+ miniUI        0.1.1.1    2018-05-18 [2] RSPM (R 4.2.0)
+ munsell       0.5.0      2018-06-12 [2] RSPM (R 4.2.0)
+ pillar        1.8.1      2022-08-19 [2] RSPM (R 4.2.0)
+ pkgbuild      1.4.0      2022-11-27 [2] RSPM (R 4.2.0)
+ pkgconfig     2.0.3      2019-09-22 [2] RSPM (R 4.2.0)
+ pkgload       1.3.2      2022-11-16 [2] RSPM (R 4.2.0)
+ prettyunits   1.1.1      2020-01-24 [2] RSPM (R 4.2.0)
+ processx      3.8.0      2022-10-26 [2] RSPM (R 4.2.0)
+ profvis       0.3.7      2020-11-02 [2] RSPM (R 4.2.0)
+ promises      1.2.0.1    2021-02-11 [2] RSPM (R 4.2.0)
+ ps            1.7.2      2022-10-26 [2] RSPM (R 4.2.0)
+ purrr       * 1.0.1      2023-01-10 [2] RSPM (R 4.2.2)
+ R6            2.5.1      2021-08-19 [2] RSPM (R 4.2.0)
+ Rcpp          1.0.10     2023-01-22 [2] RSPM (R 4.2.2)
+ readr       * 2.1.3      2022-10-01 [2] RSPM (R 4.2.0)
+ remotes       2.4.2      2021-11-30 [2] RSPM (R 4.2.0)
+ rlang         1.0.6      2022-09-24 [2] RSPM (R 4.2.0)
+ rmarkdown     2.20       2023-01-19 [2] RSPM (R 4.2.2)
+ rprojroot     2.0.3      2022-04-02 [2] RSPM (R 4.2.0)
+ rstudioapi    0.14       2022-08-22 [2] RSPM (R 4.2.0)
+ sass          0.4.5      2023-01-24 [2] RSPM (R 4.2.2)
+ scales        1.2.1      2022-08-20 [2] RSPM (R 4.2.0)
+ sessioninfo   1.2.2      2021-12-06 [2] RSPM (R 4.2.0)
+ shiny         1.7.4      2022-12-15 [2] RSPM (R 4.2.0)
+ stringi       1.7.12     2023-01-11 [2] RSPM (R 4.2.2)
+ stringr     * 1.5.0      2022-12-02 [2] RSPM (R 4.2.0)
+ tibble      * 3.1.8      2022-07-22 [2] RSPM (R 4.2.0)
+ tidyr       * 1.3.0      2023-01-24 [2] RSPM (R 4.2.2)
+ tidyselect    1.2.0      2022-10-10 [2] RSPM (R 4.2.0)
+ tidyverse   * 1.3.2.9000 2023-02-21 [2] Github (tidyverse/tidyverse@d4a33f6)
+ timechange  * 0.1.1      2022-11-04 [2] RSPM (R 4.2.0)
+ tzdb          0.3.0      2022-03-28 [2] RSPM (R 4.2.0)
+ urlchecker    1.0.1      2021-11-30 [2] RSPM (R 4.2.0)
+ usethis       2.1.6      2022-05-25 [2] RSPM (R 4.2.0)
+ utf8          1.2.3      2023-01-31 [2] RSPM (R 4.2.2)
+ vctrs         0.5.2      2023-01-23 [2] RSPM (R 4.2.2)
+ vroom         1.6.0      2022-09-30 [2] RSPM (R 4.2.0)
+ whisker       0.4.1      2022-12-05 [2] RSPM (R 4.2.0)
+ withr         2.5.0      2022-03-03 [2] RSPM (R 4.2.0)
+ workflowr   * 1.7.0      2021-12-21 [2] RSPM (R 4.2.0)
+ xfun          0.37       2023-01-31 [2] RSPM (R 4.2.2)
+ xtable        1.8-4      2019-04-21 [2] RSPM (R 4.2.0)
+ yaml          2.3.7      2023-01-23 [2] RSPM (R 4.2.2)
+
+ [1] /home/etretiakov/R/x86_64-pc-linux-gnu-library/4.2
+ [2] /opt/R/4.2.2/lib/R/library
+
+──────────────────────────────────────────────────────────────────────────────</code></pre>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-R-rmarkdown" class="csl-entry">
+Allaire, JJ, Yihui Xie, Jonathan McPherson, Javier Luraschi, Kevin
+Ushey, Aron Atkins, Hadley Wickham, Joe Cheng, Winston Chang, and
+Richard Iannone. 2023. <em>Rmarkdown: Dynamic Documents for r</em>.
+</div>
+<div id="ref-R-gridExtra" class="csl-entry">
+Auguie, Baptiste. 2017. <em>gridExtra: Miscellaneous Functions for
+"Grid" Graphics</em>.
+</div>
+<div id="ref-R-workflowr" class="csl-entry">
+Blischak, John, Peter Carbonetto, and Matthew Stephens. 2021.
+<em>Workflowr: A Framework for Reproducible and Collaborative Data
+Science</em>. <a
+href="https://github.com/workflowr/workflowr">https://github.com/workflowr/workflowr</a>.
+</div>
+<div id="ref-conwayUpSetRPackageVisualization2017" class="csl-entry">
+Conway, Jake R, Alexander Lex, and Nils Gehlenborg. 2017. <span>“UpSetR:
+An R Package for the Visualization of Intersecting Sets and Their
+Properties.”</span> Edited by John Hancock. <em>Bioinformatics</em> 33
+(18): 2938–40. <a
+href="https://doi.org/10.1093/bioinformatics/btx364">https://doi.org/10.1093/bioinformatics/btx364</a>.
+</div>
+<div id="ref-R-UpSetR" class="csl-entry">
+Gehlenborg, Nils. 2019. <em>UpSetR: A More Scalable Alternative to Venn
+and Euler Diagrams for Visualizing Intersecting Sets</em>. <a
+href="http://github.com/hms-dbmi/UpSetR">http://github.com/hms-dbmi/UpSetR</a>.
+</div>
+<div id="ref-hafemeister2019" class="csl-entry">
+Hafemeister, Christoph, and Rahul Satija. 2019. <span>“Normalization and
+Variance Stabilization of Single-Cell RNA-Seq Data Using Regularized
+Negative Binomial Regression.”</span> <em>Genome Biology</em> 20 (1):
+296. <a
+href="https://doi.org/10.1186/s13059-019-1874-1">https://doi.org/10.1186/s13059-019-1874-1</a>.
+</div>
+<div id="ref-lunEmptyDropsDistinguishingCells2019" class="csl-entry">
+Lun, Aaron T. L., Samantha Riesenfeld, Tallulah Andrews, The Phuong Dao,
+Tomas Gomes, and John C. Marioni. 2019. <span>“EmptyDrops:
+distinguishing cells from empty droplets in droplet-based single-cell
+RNA sequencing data.”</span> <em>Genome biology</em> 20 (1): 63. <a
+href="https://doi.org/10.1186/s13059-019-1662-y">https://doi.org/10.1186/s13059-019-1662-y</a>.
+</div>
+<div id="ref-molderSustainableDataAnalysis2021" class="csl-entry">
+Mölder, Felix, Kim Philipp Jablonski, Brice Letcher, Michael B. Hall,
+Christopher H. Tomkins-Tinch, Vanessa Sochat, Jan Forster, et al. 2021.
+<span>“Sustainable Data Analysis with Snakemake.”</span>
+<em>F1000Research</em> 10 (January): 33. <a
+href="https://doi.org/gjjkwv">https://doi.org/gjjkwv</a>.
+</div>
+<div id="ref-poolEnhancedRecoverySinglecell2022" class="csl-entry">
+Pool, Allan-Hermann, Helen Poldsam, Sisi Chen, Matt Thomson, and Yuki
+Oka. 2022. <span>“Enhanced Recovery of Single-Cell RNA-Sequencing Reads
+for Missing Gene Expression Data,”</span> April. <a
+href="https://doi.org/10.1101/2022.04.26.489449">https://doi.org/10.1101/2022.04.26.489449</a>.
+</div>
+<div id="ref-stuartIntegrativeSinglecellAnalysis2019" class="csl-entry">
+Stuart, Tim, and Rahul Satija. 2019. <span>“Integrative single-cell
+analysis.”</span> <em>Nature reviews. Genetics</em> 20 (5): 257–72. <a
+href="https://doi.org/10.1038/s41576-019-0093-7">https://doi.org/10.1038/s41576-019-0093-7</a>.
+</div>
+<div id="ref-traag2019" class="csl-entry">
+Traag, V. A., L. Waltman, and N. J. van Eck. 2019. <span>“From Louvain
+to Leiden: Guaranteeing Well-Connected Communities.”</span>
+<em>Scientific Reports</em> 9 (1): 5233. <a
+href="https://doi.org/10.1038/s41598-019-41695-z">https://doi.org/10.1038/s41598-019-41695-z</a>.
+</div>
+<div id="ref-R-tidyverse" class="csl-entry">
+Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the
+Tidyverse</em>.
+</div>
+<div id="ref-R-dplyr" class="csl-entry">
+Wickham, Hadley, Romain François, Lionel Henry, Kirill Müller, and Davis
+Vaughan. 2023. <em>Dplyr: A Grammar of Data Manipulation</em>.
+</div>
+<div id="ref-R-purrr" class="csl-entry">
+Wickham, Hadley, and Lionel Henry. 2023. <em>Purrr: Functional
+Programming Tools</em>.
+</div>
+<div id="ref-R-tidyr" class="csl-entry">
+Wickham, Hadley, Davis Vaughan, and Maximilian Girlich. 2023. <em>Tidyr:
+Tidy Messy Data</em>.
+</div>
+<div id="ref-R-cowplot" class="csl-entry">
+Wilke, Claus O. 2020. <em>Cowplot: Streamlined Plot Theme and Plot
+Annotations for Ggplot2</em>. <a
+href="https://wilkelab.org/cowplot/">https://wilkelab.org/cowplot/</a>.
+</div>
+<div id="ref-R-knitr" class="csl-entry">
+Xie, Yihui. 2023. <em>Knitr: A General-Purpose Package for Dynamic
+Report Generation in r</em>. <a
+href="https://yihui.org/knitr/">https://yihui.org/knitr/</a>.
+</div>
+<div id="ref-zappiaClusteringTreesVisualization2018" class="csl-entry">
+Zappia, Luke, and Alicia Oshlack. 2018. <span>“Clustering Trees: A
+Visualization for Evaluating Clusterings at Multiple
+Resolutions.”</span> <em>GigaScience</em> 7 (7): giy083. <a
+href="https://doi.org/10.1093/gigascience/giy083">https://doi.org/10.1093/gigascience/giy083</a>.
+</div>
+<div id="ref-zhengMassivelyParallelDigital2017" class="csl-entry">
+Zheng, Grace X. Y., Jessica M. Terry, Phillip Belgrader, Paul Ryvkin,
+Zachary W. Bent, Ryan Wilson, Solongo B. Ziraldo, et al. 2017.
+<span>“Massively parallel digital transcriptional profiling of single
+cells.”</span> <em>Nature communications</em> 8 (January): 14049. <a
+href="https://doi.org/10.1038/ncomms14049">https://doi.org/10.1038/ncomms14049</a>.
+</div>
+</div>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.2 (2022-10-31)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.1 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] lubridate_1.9.0      timechange_0.1.1     forcats_0.5.2       
+ [4] stringr_1.5.0        dplyr_1.1.0          purrr_1.0.1         
+ [7] readr_2.1.3          tidyr_1.3.0          tibble_3.1.8        
+[10] ggplot2_3.4.1        tidyverse_1.3.2.9000 jsonlite_1.8.4      
+[13] knitr_1.42           glue_1.6.2           workflowr_1.7.0     
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.10       here_1.0.1        prettyunits_1.1.1 getPass_0.2-2    
+ [5] ps_1.7.2          rprojroot_2.0.3   digest_0.6.31     utf8_1.2.3       
+ [9] mime_0.12         R6_2.5.1          evaluate_0.20     httr_1.4.4       
+[13] pillar_1.8.1      rlang_1.0.6       rstudioapi_0.14   miniUI_0.1.1.1   
+[17] urlchecker_1.0.1  whisker_0.4.1     callr_3.7.3       jquerylib_0.1.4  
+[21] rmarkdown_2.20    devtools_2.4.5    htmlwidgets_1.6.1 bit_4.0.5        
+[25] munsell_0.5.0     shiny_1.7.4       compiler_4.2.2    httpuv_1.6.9     
+[29] xfun_0.37         pkgconfig_2.0.3   pkgbuild_1.4.0    htmltools_0.5.4  
+[33] tidyselect_1.2.0  fansi_1.0.4       crayon_1.5.2      tzdb_0.3.0       
+[37] withr_2.5.0       later_1.3.0       grid_4.2.2        xtable_1.8-4     
+[41] gtable_0.3.1      lifecycle_1.0.3   git2r_0.30.1      magrittr_2.0.3   
+[45] scales_1.2.1      cli_3.6.0         stringi_1.7.12    vroom_1.6.0      
+[49] cachem_1.0.6      remotes_2.4.2     fs_1.6.1          promises_1.2.0.1 
+[53] bslib_0.4.2       ellipsis_0.3.2    generics_0.1.3    vctrs_0.5.2      
+[57] tools_4.2.2       bit64_4.0.5       hms_1.1.2         pkgload_1.3.2    
+[61] processx_3.8.0    parallel_4.2.2    fastmap_1.1.0     yaml_2.3.7       
+[65] colorspace_2.1-0  sessioninfo_1.2.2 memoise_2.0.1     usethis_2.1.6    
+[69] profvis_0.3.7     sass_0.4.5       </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
