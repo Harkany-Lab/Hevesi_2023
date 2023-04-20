@@ -7,4 +7,28 @@ editor_options:
   chunk_output_type: console
 ---
 
-Describe your project.
+# Transient galanin expression shapes peripheral‑to‑central connectivity in the somatosensory thalamus during whisker development
+
+This repository contains code and output of the analysis of single-nuclei
+RNA sequencing data for the article [Hevesi Z et al., 2023][publication].
+
+Please see file `CITATION` in the root of your Git repo that contains
+the citation information.
+
+To see the results of the analysis please visit
+the [analysis website][website].
+
+## Purpose:
+
+We aimed to resolve if there is a matched expression of neuropeptide receptor(s) and their ligand(s) between the sensory trunk of the trigeminal nerve (Pr5) and the ventrobasal hypothalamus on postnatal day 7 (P7) in mice. We hypothesized that a coincidence of neuropeptide expression and release from the ventrobasal thalamus and the cognate receptor(s) for the specific neuropeptide(s) in trigeminal neurons could allow for novel hypotheses be built on intercellular communication between peripheral axons and their postsynaptic targets in the thalamus. Thereby, this work can be informative of the developmental integration of the whisker pathway, one of the major sensory modalities in laboratory rodents. To this end, we used single-cell RNA-seq on cells dissociated from the ventrobasal thalamus and Pr5 on P7.
+
+## Results:
+
+We tested this hypothesis by single-nucleus RNA-seq performed in parallel on the ventrobasal thalamus and Pr5 at P7. At this developmental stage, the ventrobasal thalamus contained two subtypes of Slc17a6+(glutamatergic) neurons, one subtype of Gad1/Gad2+ (GABA) neurons, astroglia, oligodendrocytes, and vascular components (n = 923 nuclei isolated from n = 3 pups of mixed sex). Slc17a6+ neurons, which we recognize as cortically projecting glutamate neurons, co-expressed molecular components underpinning barrel map formation (e.g., Grin1, Adcy1, Prkaca,99 Ache, Slc6a4) and a significant amount of the thalamocortical neuronal marker Cck, while other neuropeptides/hormones were absent or barely present (e.g., Npy, Sst). At the same time, we harvested n = 731 nuclei from the Pr5 by micro-excision at P7, of which ∼98% expressed Slc17a6, thus qualifying, in total or in part, as centrally-projecting sensory neurons. This neuronal cohort harbored axon guidance molecules, and neuropeptide receptors.
+
+## Conclusions:
+
+We suggest that neuropeptides, particularly galanin, could participate in guidance decisions of Pr5 axons given the complementarity of ligand-receptor expression patterns, and that Galr1 expression could be a time locked feature for those neurons that actively undergo neuritogenesis at a given time.
+
+[publication]: https://doi.org/ "Hevesi Z et al., "
+[website]: https://harkany-lab.github.io/Hevesi_2023/index.html "Analysis website"
