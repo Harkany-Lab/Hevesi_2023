@@ -93,7 +93,8 @@ We check list of genes based on our prior knowledge.
 
 ```{r}
 gene_of_interest <-
-  c("Gal", "Slc17a7", "Slc6a4", "Ache", 
+  c("Gal", "Galr1", "Galr2", "Galr3",
+    "Slc17a7", "Slc6a4", "Ache", 
     "Prkaca", "Adcy1", "Grin1", 
     "Cck", "Oxt", "Npy", "Sst", "Avp")
 
@@ -561,6 +562,19 @@ p3 <- DotPlot_scCustom(
 p3
 ```
 
+```{r pl-stckvlnplot-vglut2-rna, fig.align='center', fig.width=4, fig.asp=0.618}
+p4 <- Stacked_VlnPlot(
+  seurat_object = srt_vglut2,
+  assay = "RNA",
+  features = genes_present$found_features,
+  x_lab_rotate = 90
+)
+p4
+```
+
 ```{r pl-fig-2d, fig.align='center', fig.width=18, fig.asp = 0.206}
 p1 | p2 | p3
+```
+```{r pl-fig2d-alt, fig.align='center', fig.width=18, fig.asp=0.206}
+p1 | p2 | p4
 ```
