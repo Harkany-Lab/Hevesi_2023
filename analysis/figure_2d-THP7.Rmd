@@ -562,12 +562,12 @@ p3 <- DotPlot_scCustom(
 p3
 ```
 
-```{r pl-stckvlnplot-vglut2-rna, fig.align='center', fig.width=4, fig.asp=0.618}
+```{r pl-stckvlnplot-vglut2-rna, fig.align='center', fig.width=4, fig.height=7.416}
 p4 <- Stacked_VlnPlot(
   seurat_object = srt_vglut2,
   assay = "RNA",
   features = genes_present$found_features,
-  x_lab_rotate = 90
+  x_lab_rotate = F
 )
 p4
 ```
@@ -575,6 +575,7 @@ p4
 ```{r pl-fig-2d, fig.align='center', fig.width=18, fig.asp = 0.206}
 p1 | p2 | p3
 ```
-```{r pl-fig2d-alt, fig.align='center', fig.width=18, fig.asp=0.206}
-p1 | p2 | p4
+
+```{r pl-fig2d-alt, fig.align='center', fig.width=12, fig.height=7.416}
+(p1 / p2) | p4
 ```
