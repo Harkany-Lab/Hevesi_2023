@@ -127,8 +127,7 @@ DimPlot_scCustom(
 
 ```{r drv-sbs-mtx-neurons}
 sbs_mtx_neuro <-
-    neurons %>%
-    GetAssayData("data", "RNA") %>%
+    neurons[["RNA"]]$data %>%
     as.data.frame() %>%
     t()
 rownames(sbs_mtx_neuro) <- colnames(neurons)
@@ -189,8 +188,7 @@ neuro_fin$status <- neuro_fin$gaba_status %>%
 Idents(neuro_fin) <- "status"
 
 sbs_mtx_neuro <-
-    neuro_fin %>%
-    GetAssayData("data", "RNA") %>%
+    neuro_fin[["RNA"]]$data %>%
     as.data.frame() %>%
     t()
 rownames(sbs_mtx_neuro) <- colnames(neuro_fin)
@@ -269,26 +267,19 @@ p1
 ```
 
 ```{r pl-density-slc17a6, fig.align='center', fig.width=7, fig.asp = 0.618}
-Plot_Density_Custom(
-  seurat_object = srt,
-  features = "Slc17a6",
-  pt.size = 2) + 
-  ggtitle("Slc17a6(Vglut2): ") + theme(plot.title = element_text(size = 24))
+SCpubr::do_NebulosaPlot(sample = srt, features = "Slc17a6")
 ```
 ```{r pl-density-galr1, fig.align='center', fig.width=7, fig.asp = 0.618}
-Plot_Density_Custom(
-  seurat_object = srt,
-  features = "Galr1",
-  pt.size = 2) + 
-  ggtitle("Galr1: ") + theme(plot.title = element_text(size = 24))
+SCpubr::do_NebulosaPlot(sample = srt, features = "Galr1")
 ```
 
 ```{r pl-density-slc17a6-Galr1, fig.align='center', fig.width=7, fig.asp = 0.618}
-Plot_Density_Joint_Only(
-  seurat_object = srt,
+SCpubr::do_NebulosaPlot(
+  sample = srt,
   features = c("Slc17a6", "Galr1"),
-  pt.size = 2) + 
-  ggtitle("Slc17a6(Vglut2) + Galr1 ") + theme(plot.title = element_text(size = 24))
+  joint = TRUE, 
+  return_only_joint = TRUE,
+  plot.title = "Joint density Slc17a6(Vglut2) + Galr1")
 ```
 
 ```{r}
@@ -309,19 +300,19 @@ p2
 ```
 
 ```{r pl-density-Galr1, fig.align='center', fig.width=7, fig.asp = 0.618}
-Plot_Density_Custom(
-  seurat_object = srt_vglut2,
-  features = "Galr1",
-  pt.size = 2) + 
-  ggtitle("Galr1 across Vglut cell-populations only") + theme(plot.title = element_text(size = 24))
+SCpubr::do_NebulosaPlot(
+  sample = srt_vglut2,
+  features = c("Galr1"),
+  plot.title = "Galr1 across Vglut cell-populations only")
 ```
 
 ```{r pl-density-Galr1-across-vglut2, fig.align='center', fig.width=7, fig.asp = 0.618}
-Plot_Density_Joint_Only(
-  seurat_object = srt_vglut2,
+SCpubr::do_NebulosaPlot(
+  sample = srt_vglut2,
   features = c("Slc17a6", "Galr1"),
-  pt.size = 2) + 
-  ggtitle("Slc17a6 + Galr1 across Vglut cell-populations only") + theme(plot.title = element_text(size = 24))
+  joint = TRUE, 
+  return_only_joint = TRUE,
+  plot.title = "Joint density Slc17a6 + Galr1 across Vglut cells")
 ```
 
 ```{r pl-clusters-glut2, fig.align='center', fig.width=7, fig.asp = 0.618}
@@ -345,7 +336,7 @@ p3 <- DotPlot_scCustom(
   features = genes_present$found_features,
   flip_axes = TRUE,
   x_lab_rotate = TRUE,
-  dot.min = .05,
+  dot.min = .01,
   dot.scale = 10,
   colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"))
 p3
@@ -367,4 +358,204 @@ p1 | p2 | p3
 
 ```{r pl-fig2d-alt, fig.align='center', fig.width=12, fig.height=7.416}
 (p1 / p2) | p4
+```
+
+```{r}
+library(org.Mm.eg.db)
+library(AnnotationDbi)
+library(clusterProfiler)
+
+# Define the GO IDs
+go_ids <- c(
+  'GO:0007411',  # axon guidance
+  'GO:0007409',  # axonogenesis
+  'GO:0030426',  # growth cone
+  'GO:0021860',  # pyramidal neuron development
+  'GO:0097490',  # sympathetic neuron projection extension
+  'GO:1990138',  # neuron projection extension
+  'GO:0010976',  # positive regulation of neuron projection development
+  'GO:0010977',  # negative regulation of neuron projection development
+  'GO:0021952')  # central nervous system projection neuron axonogenesis
+
+# Initialize a list to store gene symbols for each GO term
+gene_symbols_list <- list()
+
+# Fetch gene symbols for each GO term
+for(i in seq_along(go_ids)) {
+  gene_ids <-
+    AnnotationDbi::select(
+      org.Mm.eg.db,
+      keys = go_ids[i],
+      columns = "ENTREZID",
+      keytype = "GO"
+    )
+  gene_symbols <-
+    mapIds(
+      org.Mm.eg.db,
+      keys = gene_ids$ENTREZID,
+      column = "SYMBOL",
+      keytype = "ENTREZID",
+      multiVals = "first"
+    )
+  gene_symbols_list[[go_ids[i]]] <- gene_symbols
+}
+
+gene_symbols_list %<>% map(unique)
+
+GetGoMatrix <- function(genes) {
+  e <- t(as.matrix(srt_vglut2[["SCT"]]$data[
+    srt_vglut2[["SCT"]]$data %>%
+      rowSums() %>%
+      .[. > 1] %>%
+      names() %>%
+      .[. %in% genes],
+  ]))
+  return(e)
+}
+
+go_matrixes <- gene_symbols_list |> map(GetGoMatrix)
+
+# Print the gene symbols for each GO term
+for (i in seq_along(gene_symbols_list)) {
+  print(paste("GO ID:", names(gene_symbols_list[i])))
+  print(gene_symbols_list[[i]])
+}
+
+genes_keep <- gene_symbols_list |> purrr::reduce(c) |> unique()
+```
+
+```{r}
+srt_vglut2$Galr1_expression <- srt_vglut2[["RNA"]]$counts["Galr1",] > 0
+srt_vglut2$vglut2_expression <- srt_vglut2[["RNA"]]$counts["Slc17a6",] > 0
+srt_vglut2_galr1 <- subset(srt_vglut2, subset = Galr1_expression)
+bulk_all <- Matrix::rowSums(srt_vglut2[["RNA"]]$counts != 0)/ncol(srt_vglut2)
+bulk_vglut2_galr1 <- Matrix::rowSums(srt_vglut2_galr1[["RNA"]]$counts != 0)/ncol(srt_vglut2_galr1)
+genes_keep %<>% .[. %in% names(bulk_all)]
+write_excel_csv(data.frame("gene" = names(bulk_all), "vglut2_clusters" = bulk_all, "galr1" = bulk_vglut2_galr1), here(tables_dir, "bulk_vglut2_clusters_expression.csv"))
+write_excel_csv(data.frame("gene" = names(bulk_all), "vglut2_clusters" = bulk_all, "galr1" = bulk_vglut2_galr1)[genes_keep,], here(tables_dir, "bulk_vglut2_clusters_expression_subset.csv"))
+
+srt_vglut2$Galr1_expression <- ifelse(srt_vglut2$Galr1_expression, "Galr1+", "Galr1-")
+srt_vglut2$vglut2_expression <- ifelse(srt_vglut2$vglut2_expression, "Vglut2+", "Vglut2-")
+srt_vglut2$status <- str_c(srt_vglut2$vglut2_expression, srt_vglut2$Galr1_expression, sep = "_")
+library(scBubbletree)
+A <- Embeddings(srt_vglut2[["pca"]])
+m <- srt_vglut2@meta.data
+
+bubbletree <- scBubbletree::get_bubbletree_dummy(
+  x = A,
+  cs = as.vector(srt_vglut2$status),
+  B = 200,
+  N_eff = 200,
+  cores = n_cores,
+  round_digits = 1
+)
+bubbletree$tree
+```
+
+
+```{r pl-bubbletree-exp-axon-guidance}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0007411"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-axonogenesis}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0007409"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-growth-cone}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0030426"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-pyramidal-neuron-development}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0021860"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-sympathetic-neuron-projection-extension}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0097490"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-neuron-projection-extension}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:1990138"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-positive-regulation-of-neuron-projection-development}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0010976"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-negative-regulation-of-neuron-projection-development}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0010977"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
+```
+
+
+```{r pl-bubbletree-exp-central-nervous-system-projection-neuron-axonogenesis}
+bubbletree$tree
+  scBubbletree::get_num_tiles(btd = bubbletree,
+                    fs = go_matrixes[["GO:0021952"]],
+                    summary_function = "pct nonzero",
+                    x_axis_name = 'Gene expression',
+                    rotate_x_axis_labels = TRUE,
+                    round_digits = 1,
+                    tile_text_size = 2.75)$plot
 ```
